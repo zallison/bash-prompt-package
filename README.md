@@ -4,7 +4,7 @@ Bash prompt customization made easy!
 
 [Examples](#examples)
 
-[Built In Prompts](#built-in-prompts)
+[Built In Example Prompts](#built-in-prompts)
 
 [All Functions](#all-functions)
 
@@ -31,12 +31,12 @@ how about some examples?
 
 Here's a simple example,showing just the VCS (git or svn) status, as well as "\w", the current working directory.
 
-    source bash-prompt-package.sh
+	source bash-prompt-package.sh
 
-    BPP=(
-    "CMD bpp_vcs"
-    "STRDEC \w"
-    "STR $ ")
+	BPP=(
+	"CMD bpp_vcs"
+	"STRDEC \w"
+	"STR $ ")
 
 
 ![simple prompt](./examples/prompt1.png)
@@ -55,21 +55,24 @@ As does comitting it!
 
 ---
 
-Here's a two line prompt showing battery and cpu temp information.  The config looks something like
+Here's a two line prompt showing uptime, battery, and cpu temp information on top, with VCS (git, svn, etc) and the current path..  The config looks something like
 
 
-    source bash-prompt-package.sh
-    
-    BPP=("CMD bpp_error"
-         "STR ${BPP_NEWLINE}${DECORATION_COLOR}${TOP} "
-         "CMD bpp_user_and_host"
-         "CMD bpp_uptime"
-         "CMD bpp_acpi"
-         "CMD bpp_venv"
-         "CMD bpp_cpu_temp"
-         "STR ${BPP_NEWLINE}${DECORATION_COLOR}${BOTTOM}${RESET}"
-         "CMD bpp_vcs"
-         "STR ${DECORATION_COLOR}${BPP_UTF8_OPEN}${RESET}\w${DECORATION_COLOR}${BPP_UTF8_CLOSE}\$${NON_BREAKING_SPACE}")
+	source bash-prompt-package.sh
+
+	BPP=("CMD bpp_error"
+		 "STR ${BPP_GLYPHS[NEWLINE]}${BPP_COLOR[DECORATION]}${BPP_GLYPHS[TOP]} "
+		 "CMD bpp_user_and_host"
+		 "CMD bpp_uptime"
+		 "CMD bpp_acpi"
+		 "CMD bpp_cpu_temp"
+		 "CMD bpp_text mytask"
+		 "CMDRAW bpp_notes"
+		 "STR ${BPP_GLYPHS[NEWLINE]}${BPP_COLOR[DECORATION]}${BPP_GLYPHS[BOTTOM]}${BPP_COLOR[RESET]}"
+		 "CMD bpp_vcs"
+		 "STR ${BPP_COLOR[DECORATION]}${BPP_GLYPHS[OPEN]}${BPP_COLOR[RESET]}\w${BPP_COLOR[DECORATION]}${BPP_GLYPHS[CLOSE]}\$");
+	 bpp-text "Report bugs" mytask
+
 
 
 ![simple prompt](./examples/prompt5.png)
@@ -78,13 +81,13 @@ Here's a two line prompt showing battery and cpu temp information.  The config l
 
 Changing colors is easy too:
 
-    export GOOD_COLOR=$PURPLE
-    export WARNING_COLOR="${BRIGHTRED_BG}${BLACK}"
-    export CRIT_COLOR=${BRIGHTRED_BG}${WHITE}
+	BPP_COLOR[GOOD]=${BPP_COLOR[PURPLE]}
+	BPP_COLOR[WARNING]=${BPP_BGCOLOR[BRIGHTRED]}${BPP_COLOR[BLACK]}
+	BPP_COLOR[CRIT]=${BPP_BGCOLOR[BRIGHTRED]}${BPP_COLOR[WHITE]}
 
 ![simple prompt](./examples/prompt6.png)
 
-256 colors to choose from!  Which 256 is up to your terminal emulator.
+256 colors to choose from!  Which 256 is up to your terminal emulator.  See which are available using `bpp-show-colors`
 
 ![colors](./examples/show-colors.png)
 
@@ -124,31 +127,35 @@ There are some commands that don't add anything to the prompt but are still usef
 
 `bpp-super-git-prompt` - More git info than you'll ever need!
 
-## All Functions
-
-`bpp_date` - Show the current date, according to `BPP_DATE_FORMAT`
-
-`bpp_uptime` - Show and colorize uptime values
-
-`bpp_user_and_host` - Show and colorize user@host (yellow for remote hosts, red if you're root)
-
-`bpp_error` - Shows the error status of the last command
-
-`bpp_venv` - Python virtual environment variable options
-
-`bpp_vcs` - Show git or svn status information in a compact manner
-
-`bpp_dirinfo` - Information about the current directory, number of files, size, etc.  Slow on remove file systems
-
-`bpp_set_title` - Send the escape sequence to set the title for xterm, screen, tmux etc.
-
-`bpp_send_emacs_path_info` - Send the current path info to emacs, allowing TRAMP to easily make connections
+## All Functions - Alphabetical
 
 `bpp_acpi`- Battery info
 
-`bpp_cpu_temp` - A simple average of CPU core temps
+`bpp_cpu_temp` - A simple average of CPU core temps.  It "works for me™".  Needs a rewrite to work in more cases (e.g. with lm-sensors, etc)
 
-`bpp_history` - Share history among terminals
+`bpp_date` - Show the current date and/or time, according to `BPP_DATE_FORMAT`
+
+`bpp_dirinfo` - Information about the current directory, number of files, and directory (non-recursive0 size.  Slow on remove file systems
+
+`bpp_error` - Shows the error status of the last command
+
+`bpp_history` - Share history among terminals. (history -a ; history -p)
+
+`bpp_note` - Show a note for a given directory.  Set notes with `bpp-note "message" <dir>`.  If no dir is given pwd is used.  The option BPP_OPTIONS[NOTE_ON_ENTRY] gives you the option to only show when you enter the diretory, instead of whenever you're in the dir.
+
+`bpp_send_emacs_path_info` - Send the current path info to emacs in ansi-term, allowing TRAMP to easily make connections
+
+`bpp_set_title` - Send the escape sequence to set the title for xterm, screen, tmux etc.
+
+`bpp_text <id>` - Show the text value id, set with `bpp-text "some message" myid` unset with `bpp-untext myid`, or by set the variable diretly at BPP_NOTES[id]. **ESCAPED VARIABLES WILL BE EVALUATED**, e.g: `bpp-text "host: \$DOCKER_HOST"` will eval DOCKER_HOST on display  It is colored with BPP_COLOR[INFO].
+
+`bpp_uptime` - Show and colorize uptime values
+
+`bpp_user_and_host` - Show and colorize user@host (e.g. yellow for remote hosts, red if you're root)
+
+`bpp_vcs` - Show git or svn status information in a compact manner
+
+`bpp_venv` - Python virtual environment variable options.  Use `bpp-venv` to activate, disactive, or return.
 
 ## More Info
 
@@ -160,8 +167,8 @@ Check the [source code](bash-prompt-package.sh) of the [functions](#all-function
 
 Example:
 
-    function bpp_date {
-        if [[ ${BPP_DATE} == 1 ]]; then
-            echo "${BPP_GOOD_COLOR}$(date +${BPP_DATE_FORMAT})"
-        fi
-    }
+	function bpp_date {
+		if [[ ${BPP_ENABLED[DATE]} == 1 ]]; then
+			echo "${BPP_COLOR[INFO]}$(date +${BPP_DATE_FORMAT})"
+		fi
+	}
