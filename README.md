@@ -46,6 +46,8 @@ how about some examples?
 
 ---
 
+## VCS Example
+
 Here's a simple example,showing just the VCS (git or svn) status, as well as "\w", the current working directory.
 
 	source bash-prompt-package.sh
@@ -56,21 +58,23 @@ Here's a simple example,showing just the VCS (git or svn) status, as well as "\w
 	"STR $ ")
 
 
-![simple prompt](./examples/prompt1.png)
+![vcs prompt 1](./examples/prompt1.png)
 
 After modifying a file you can see the status change
 
-![simple prompt](./examples/prompt2.png)
+![vcs prompt 2](./examples/prompt2.png)
 
 Staging the files changes the status
 
-![simple prompt](./examples/prompt3.png)
+![VCS prompt 3](./examples/prompt3.png)
 
 As does comitting it!
 
-![simple prompt](./examples/prompt4.png)
+![vcs prompt 4](./examples/prompt4.png)
 
 ---
+
+## Two Line Prompt
 
 Here's a two line prompt showing uptime, battery, and cpu temp information on top, with VCS (git, svn, etc) and the current path..  The config looks something like
 
@@ -92,9 +96,11 @@ Here's a two line prompt showing uptime, battery, and cpu temp information on to
 
 
 
-![simple prompt](./examples/prompt5.png)
+![two line prompt](./examples/prompt5.png)
 
 ---
+
+## Changing Colors
 
 Changing colors is easy too:
 
@@ -102,7 +108,7 @@ Changing colors is easy too:
 	BPP_COLOR[WARNING]=${BPP_BGCOLOR[BRIGHTRED]}${BPP_COLOR[BLACK]}
 	BPP_COLOR[CRIT]=${BPP_BGCOLOR[BRIGHTRED]}${BPP_COLOR[WHITE]}
 
-![simple prompt](./examples/prompt6.png)
+![new color prompt](./examples/prompt6.png)
 
 256 colors to choose from!  Which 256 is up to your terminal emulator.  See which are available using `bpp-show-colors`
 
@@ -110,9 +116,11 @@ Changing colors is easy too:
 
 ---
 
+## Other Functions
+
 Other modules include `bpp_uptime` and `bpp_date`
 
-![simple prompt](./examples/prompt7.png)
+![uptime and date prompt](./examples/prompt7.png)
 
 The `bpp_venv` modules is really handy for python virtual environment.  Use the command `bpp-venv` to quickly activate, deactive, or return to the root directory.  It also warns you when you change into a directory with a different virtual env, as seen below.
 
@@ -120,9 +128,13 @@ The `bpp_venv` modules is really handy for python virtual environment.  Use the 
 
 ---
 
-![simple prompt](./examples/git-prompt.png)
+## bpp-super-git-promt
+
+![super git prompt](./examples/git-prompt.png)
 
 ----
+
+## EXE vs CMD
 
 There are some commands that don't add anything to the prompt but are still useful, these are called by `EXE` instead of `CMD`.
 
@@ -189,3 +201,6 @@ Example:
 			echo "${BPP_COLOR[INFO]}$(date +${BPP_DATE_FORMAT})"
 		fi
 	}
+
+
+Seee?
