@@ -131,7 +131,6 @@ BPP_DATA[DECORATOR]=bpp_decorate
 export PROMPT_DIRTRIM=3
 
 ####### END SETTINGS #######
-
 ### Core System
 
 function prompt_command {
@@ -185,8 +184,7 @@ function bpp_decorate {
 }
 
 ### End Decorators
-
-### Modules
+### Standard Modules
 function bpp_date {
     if [[ ${BPP_ENABLED[DATE]} == 1 ]]; then
 	DATE="${BPP_COLOR[INFO]}$(date +${BPP_OPTIONS[DATE_FORMAT]})"
@@ -266,155 +264,12 @@ function bpp_error {
     echo $EXIT
 }
 
-
-function bpp_venv {
-    local envpath
-    env_path=''
-    env_prefix=''
-    for P in ${BPP_OPTIONS[VENV_PATHS]}; do
-	if [[ -f "./${P}/bin/activate" ]]; then
-	    env_path="./${P}/bin/activate"
-	    env_prefix=$P
-	    break;
-	fi
-    done
-
-    if [[ ${BPP_ENABLED[VENV]} == 1 ]]; then
-	current=$(readlink -f .)
-	if [[ $VIRTUAL_ENV ]]; then
-	    here=$(basename $current)
-	    there=$(basename $VIRTUAL_ENV)
-	    if [[ ${current} == ${VIRTUAL_ENV} ]]; then
-		VENV="${BLUE}venv: ${here}"
-	    elif [[ ! -z "$env_path" ]]; then
-		VENV="${BPP_COLOR[CRITICAL]}venv: ${BPP_COLOR[WARNING]}${there} ${BPP_COLOR[CRITICAL]}vs${BPP_COLOR[WARNING]} $here"
-	    else
-		VENV="${BPP_COLOR[WARNING]}venv: $(basename ${VIRTUAL_ENV})"
-	    fi
-	elif [[ $env_path ]]; then
-	    VENV="${BPP_COLOR[WARNING]}venv available"
-	fi
-    fi
-    echo $VENV
-}
-
-function bpp-venv {
-    local ENVPATH
-    for P in ${BPP_OPTIONS[VENV_PATHS]}; do
-	if [[ -f "./${P}/bin/activate" ]]; then
-	    ENVPATH="./${P}/bin/activate"
-	    break
-	fi
-    done
-
-    function load_env {
-	if [[ $ENVPATH ]]; then
-	    source $ENVPATH;
-	    export VIRTUAL_ENV=$(readlink -f .)
-	else
-	    echo "No virtual environment found"
-	fi
-    }
-
-    function unload_env {
-	if [[ $VIRTUAL_ENV ]]; then
-	    unset VIRTUAL_ENV
-	    deactivate
-	else
-	    echo "No virtual environment loaded"
-	fi
-
-    }
-
-    function goto_env {
-	if [[ $VIRTUAL_ENV ]]; then
-	    cd $VIRTUAL_ENV || exit
-	else
-	    echo "No virtual environment loaded"
-	fi
-    }
-
-    case $1 in
-	'') if [[ $VIRTUAL_ENV ]]; then unload_env; else load_env;fi;;
-	'activate') load_env;;
-	'disable') unload_env;;
-	'deactivate') unload_env;;
-	'return') goto_env;;
-	'go') goto_env;;
-	*) _bpp-venv; echo "Unknown action $1, try: ${COMPREPLY[*]}";;
-    esac
-}
-function _bpp-venv {
-    COMPREPLY=( $(compgen -W 'activate deactivate return go disable' -- $2))
-    return 0
-}
-complete -F _bpp-venv bpp-venv
-
-function bpp_vcs {
-    INDEX=$1
-    local VCS_TYPE
-
-    if [[ -z "$BPP_ENABLED[VCS]" || ${BPP_ENABLED[VCS]} == 0 ]]; then
-	VCS=""
-    elif [ -e .svn ] ; then
-	VCS=$(bpp_svn)
-	VCS_TYPE="svn"
-    elif [[ $(git status 2> /dev/null) ]]; then
-	VCS=$(bpp_git)
-	VCS_TYPE="git"
-    fi
-    if [[ $VCS ]]; then
-	if [[ ${BPP_ENABLED[VCS_TYPE]} == 0 ]]; then
-	    VCS="${VCS}"
-	else
-	    VCS="${VCS_TYPE} ${VCS}"
-	fi
-    fi
-
-    echo ${VCS}
-}
-
-function bpp_svn {
-    local SVN_STATUS
-    SVN_STATUS=$(svn info 2>/dev/null)
-    if [[ $SVN_STATUS != "" ]] ; then
-	local REFS
-	REFS=" $(svn info | grep "Repository Root" | sed 's/.*\///')"
-	MODS=$(svn status | sed 's/ .*//' | grep -cE ^"(M|A|D)")
-	if [[ ${MODS} != "0" ]] ; then
-	    SVN="${BLUE}svn:$REFS ${BPP_COLOR[CRITICAL]}m:${MODS}" # Modified
-	else
-	    SVN="${BLUE}svn:$REFS"
-	fi
-    fi
-    echo $SVN
-}
-
-function bpp_git() {
-    REMOTE=$(git remote -v | head -n1 | awk '{print $2}' | sed 's/.*\///' | sed 's/\.git//')
-    if [[ ! $REMOTE ]]; then
-	REMOTE=local
-    fi
-    STATUS=$(_show_git_status)
-    DETAILS=$(git status --porcelain -u -b 2>/dev/null \
-		  | awk 'BEGIN {ORS=" "}NR>1{arr[$1]++}END{for (a in arr) print a":", arr[a]}' | sed 's/ $//')
-    if [[ $DETAILS ]]; then
-	STATUS="${STATUS} ${DETAILS}";
-    fi
-    if [[ ${BPP_ENABLED[VCS_REMOTE]} == 1 ]]; then
-	GIT="${BPP_COLOR[RESET]}$REMOTE: $STATUS";
-    else
-	GIT="${BPP_COLOR[RESET]}$STATUS";
-    fi
-    echo $GIT
-}
-
 function bpp_dirinfo {
     if [[ ${BPP_ENABLED[DIRINFO]} == 1 ]]; then
-	FILES="$(/bin/ls -F | grep -cv /$) files"
+	FILES="$(/bin/ls -F | grep -cv /$)${BPP_COLOR[GOOD]}🖺${BPP_COLOR[RESET]}"
 	DIRSIZE="$(/bin/ls -lah | /bin/grep -m 1 total | /bin/sed 's/total //')"
-	DIRS="$(/bin/ls -F | grep -c /$) dirs"
-	DIRINFO="${FILES} - $DIRSIZE - $DIRS"
+	DIRS="$(/bin/ls -F | grep -c /$)${BPP_COLOR[GOOD]}📁${BPP_COLOR[RESET]}"
+	DIRINFO="${FILES} ${DIRS} ${DIRSIZE}"
     else
 	DIRINFO=""
     fi
@@ -474,65 +329,6 @@ function bpp_send_emacs_path_info() {
 	echo -e "\033AnSiTc" $(pwd)
 	echo -e "\033AnSiTh" ${ssh_hostname}
     fi
-}
-
-function _show_git_status() {
-    # Get the current git branch and colorize to indicate branch state
-    # branch_name+ indicates there are stash(es)
-    # branch_name? indicates there are untracked files
-    # branch_name! indicates your branches have diverged
-    local unknown untracked stash clean ahead behind staged dirty diverged
-    unknown=${BPP_COLOR[GOOD]}
-    untracked=${BPP_COLOR[GOOD]}
-    stash=${BPP_COLOR[GOOD]}
-    clean=${BPP_COLOR[GOOD]}
-    ahead=${BPP_COLOR[WARNING]}
-    behind=${BPP_COLOR[WARNING]}
-    staged=${UNDERLINED}${BPP_COLOR[WARNING]}
-    dirty=${BPP_COLOR[WARNING]}
-    diverged=${RED}
-
-    if [ "$(command -v git)" ]; then
-	branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
-	if [[ -n "$branch" ]]; then
-	    git_status=$(git status 2> /dev/null)
-	    # If nothing changes the color, we can spot unhandled cases.
-	    color=$unknown
-	    if [[ $git_status =~ 'Untracked files' ]]; then
-		color=$untracked
-		branch="${branch}?"
-	    fi
-	    if git stash show &>/dev/null; then
-		color=$stash
-		branch="${branch}*"
-	    fi
-	    if [[ $git_status =~ 'working directory clean' ]]; then
-		color=$clean
-	    fi
-	    if [[ $git_status =~ 'Your branch is ahead' ]]; then
-		color=$ahead
-		branch="${branch}>"
-	    fi
-	    if [[ $git_status =~ 'Your branch is behind' ]]; then
-		color=$behind
-		branch="${branch}<"
-	    fi
-	    if [[ $git_status =~ 'Changes to be committed' ]]; then
-		color=$staged
-	    fi
-	    if [[ $git_status =~ 'Changed but not updated' ||
-		      $git_status =~ 'Changes not staged'      ||
-		      $git_status =~ 'Unmerged paths' ]]; then
-		color=$dirty
-	    fi
-	    if [[ $git_status =~ 'Your branch'.+diverged ]]; then
-		color=$diverged
-		branch="${branch}!"
-	    fi
-	    echo -n "${color}${branch}${BPP_COLOR[RESET]}"
-	fi
-    fi
-    return 0
 }
 
 function bpp_acpi {
@@ -734,6 +530,221 @@ function bpp_super_git {
     done <<< $(git status --porcelain | grep ^??)
 }
 
+
+### Set prompt based on term size
+if [ $COLUMNS -lt 80 ]; then
+    BPP_ENABLED[ERROR]=0
+    if [ $COLUMNS -lt 40 ]; then
+	bpp-simple-prompt
+    else
+	bpp-compact-prompt
+    fi
+else
+    bpp-fancy-prompt
+fi
+
+
+
+function bpp_venv {
+    local envpath
+    env_path=''
+    env_prefix=''
+    for P in ${BPP_OPTIONS[VENV_PATHS]}; do
+	if [[ -f "./${P}/bin/activate" ]]; then
+	    env_path="./${P}/bin/activate"
+	    env_prefix=$P
+	    break;
+	fi
+    done
+
+    if [[ ${BPP_ENABLED[VENV]} == 1 ]]; then
+	current=$(readlink -f .)
+	if [[ $VIRTUAL_ENV ]]; then
+	    here=$(basename $current)
+	    there=$(basename $VIRTUAL_ENV)
+	    if [[ ${current} == ${VIRTUAL_ENV} ]]; then
+		VENV="${BLUE}venv: ${here}"
+	    elif [[ ! -z "$env_path" ]]; then
+		VENV="${BPP_COLOR[CRITICAL]}venv: ${BPP_COLOR[WARNING]}${there} ${BPP_COLOR[CRITICAL]}vs${BPP_COLOR[WARNING]} $here"
+	    else
+		VENV="${BPP_COLOR[WARNING]}venv: $(basename ${VIRTUAL_ENV})"
+	    fi
+	elif [[ $env_path ]]; then
+	    VENV="${BPP_COLOR[WARNING]}venv available"
+	fi
+    fi
+    echo $VENV
+}
+
+function bpp-venv {
+    local ENVPATH
+    for P in ${BPP_OPTIONS[VENV_PATHS]}; do
+	if [[ -f "./${P}/bin/activate" ]]; then
+	    ENVPATH="./${P}/bin/activate"
+	    break
+	fi
+    done
+
+    function load_env {
+	if [[ $ENVPATH ]]; then
+	    source $ENVPATH;
+	    export VIRTUAL_ENV=$(readlink -f .)
+	else
+	    echo "No virtual environment found"
+	fi
+    }
+
+    function unload_env {
+	if [[ $VIRTUAL_ENV ]]; then
+	    unset VIRTUAL_ENV
+	    deactivate
+	else
+	    echo "No virtual environment loaded"
+	fi
+
+    }
+
+    function goto_env {
+	if [[ $VIRTUAL_ENV ]]; then
+	    cd $VIRTUAL_ENV || exit
+	else
+	    echo "No virtual environment loaded"
+	fi
+    }
+
+    case $1 in
+	'') if [[ $VIRTUAL_ENV ]]; then unload_env; else load_env;fi;;
+	'activate') load_env;;
+	'disable') unload_env;;
+	'deactivate') unload_env;;
+	'return') goto_env;;
+	'go') goto_env;;
+	*) _bpp-venv; echo "Unknown action $1, try: ${COMPREPLY[*]}";;
+    esac
+}
+function _bpp-venv {
+    COMPREPLY=( $(compgen -W 'activate deactivate return go disable' -- $2))
+    return 0
+}
+complete -F _bpp-venv bpp-venv
+
+function bpp_vcs {
+    INDEX=$1
+    local VCS_TYPE
+
+    if [[ -z "$BPP_ENABLED[VCS]" || ${BPP_ENABLED[VCS]} == 0 ]]; then
+	VCS=""
+    elif [ -e .svn ] ; then
+	VCS=$(bpp_svn)
+	VCS_TYPE="svn"
+    elif [[ $(git status 2> /dev/null) ]]; then
+	VCS=$(bpp_git)
+	VCS_TYPE="git"
+    fi
+    if [[ $VCS ]]; then
+	if [[ ${BPP_ENABLED[VCS_TYPE]} == 0 ]]; then
+	    VCS="${VCS}"
+	else
+	    VCS="${VCS_TYPE} ${VCS}"
+	fi
+    fi
+
+    echo ${VCS}
+}
+
+function bpp_svn {
+    local SVN_STATUS
+    SVN_STATUS=$(svn info 2>/dev/null)
+    if [[ $SVN_STATUS != "" ]] ; then
+	local REFS
+	REFS=" $(svn info | grep "Repository Root" | sed 's/.*\///')"
+	MODS=$(svn status | sed 's/ .*//' | grep -cE ^"(M|A|D)")
+	if [[ ${MODS} != "0" ]] ; then
+	    SVN="${BLUE}svn:$REFS ${BPP_COLOR[CRITICAL]}m:${MODS}" # Modified
+	else
+	    SVN="${BLUE}svn:$REFS"
+	fi
+    fi
+    echo $SVN
+}
+
+function bpp_git() {
+    REMOTE=$(git remote -v | head -n1 | awk '{print $2}' | sed 's/.*\///' | sed 's/\.git//')
+    if [[ ! $REMOTE ]]; then
+	REMOTE=local
+    fi
+    STATUS=$(_show_git_status)
+    DETAILS=$(git status --porcelain -u -b 2>/dev/null \
+		  | awk 'BEGIN {ORS=" "}NR>1{arr[$1]++}END{for (a in arr) print a":", arr[a]}' | sed 's/ $//')
+    if [[ $DETAILS ]]; then
+	STATUS="${STATUS} ${DETAILS}";
+    fi
+    if [[ ${BPP_ENABLED[VCS_REMOTE]} == 1 ]]; then
+	GIT="${BPP_COLOR[RESET]}$REMOTE: $STATUS";
+    else
+	GIT="${BPP_COLOR[RESET]}$STATUS";
+    fi
+    echo $GIT
+}
+
+function _show_git_status() {
+    # Get the current git branch and colorize to indicate branch state
+    # branch_name+ indicates there are stash(es)
+    # branch_name? indicates there are untracked files
+    # branch_name! indicates your branches have diverged
+    local unknown untracked stash clean ahead behind staged dirty diverged
+    unknown=${BPP_COLOR[GOOD]}
+    untracked=${BPP_COLOR[GOOD]}
+    stash=${BPP_COLOR[GOOD]}
+    clean=${BPP_COLOR[GOOD]}
+    ahead=${BPP_COLOR[WARNING]}
+    behind=${BPP_COLOR[WARNING]}
+    staged=${UNDERLINED}${BPP_COLOR[WARNING]}
+    dirty=${BPP_COLOR[WARNING]}
+    diverged=${RED}
+
+    if [ "$(command -v git)" ]; then
+	branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+	if [[ -n "$branch" ]]; then
+	    git_status=$(git status 2> /dev/null)
+	    # If nothing changes the color, we can spot unhandled cases.
+	    color=$unknown
+	    if [[ $git_status =~ 'Untracked files' ]]; then
+		color=$untracked
+		branch="${branch}?"
+	    fi
+	    if git stash show &>/dev/null; then
+		color=$stash
+		branch="${branch}*"
+	    fi
+	    if [[ $git_status =~ 'working directory clean' ]]; then
+		color=$clean
+	    fi
+	    if [[ $git_status =~ 'Your branch is ahead' ]]; then
+		color=$ahead
+		branch="${branch}>"
+	    fi
+	    if [[ $git_status =~ 'Your branch is behind' ]]; then
+		color=$behind
+		branch="${branch}<"
+	    fi
+	    if [[ $git_status =~ 'Changes to be committed' ]]; then
+		color=$staged
+	    fi
+	    if [[ $git_status =~ 'Changed but not updated' ||
+		      $git_status =~ 'Changes not staged'      ||
+		      $git_status =~ 'Unmerged paths' ]]; then
+		color=$dirty
+	    fi
+	    if [[ $git_status =~ 'Your branch'.+diverged ]]; then
+		color=$diverged
+		branch="${branch}!"
+	    fi
+	    echo -n "${color}${branch}${BPP_COLOR[RESET]}"
+	fi
+    fi
+    return 0
+}
 ### Tools
 
 function bpp-show-colors {
@@ -757,20 +768,6 @@ function bpp-show-prompt {
 	j=$[ $j + 1 ];
     done | sed 's/\\\[[^]]*\]/[FMT]/g'
 }
-
-### Set prompt based on term size
-if [ $COLUMNS -lt 80 ]; then
-    BPP_ENABLED[ERROR]=0
-    if [ $COLUMNS -lt 40 ]; then
-	bpp-simple-prompt
-    else
-	bpp-compact-prompt
-    fi
-else
-    bpp-fancy-prompt
-fi
-
-### APPENDING BPP_NOTES HERE FOR NOW
 
 declare -A BPP_NOTES
 if [[ "$BPP_NOTE" == 1 || -z "$BPP_NOTE" ]]; then
