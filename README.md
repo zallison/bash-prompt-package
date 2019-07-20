@@ -192,6 +192,8 @@ Most functions will degrade gracefully, and can be controlled by environment var
 
 Each element is run through a "decorator" function, the built in one simple surronds the text with "❰" and "❱".  I'm sure someone out there can find a better use.
 
+## Make your own function
+
 Check the [source code](bash-prompt-package.sh) of the [functions](#all-functions) for examples on how to write your own.  But if you can write bash, they're super easy!
 
 Example:
@@ -202,5 +204,10 @@ Example:
 		fi
 	}
 
+or set a "text" object: `CMD bpp_text mytext` and then:
 
-Seee?
+	bpp-text "\$(ls -1 *sh | wc -l) bash files" mytext
+
+And boom, your prompt tells you how many bash files are in the current directory.  Couldn't be easier!
+
+See?  Get started!
