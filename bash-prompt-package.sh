@@ -791,7 +791,7 @@ function bpp-note {
     local MESSAGE=$1
     local DIR=${2:-$(pwd)}
     BPP_NOTES[$DIR]=$MESSAGE
-    BPP_DATA[OLDPWD]
+    BPP_DATA[OLDPWD]=$(pwd)
     _bpp_note_save
 }
 alias _bpp_note=bpp-note
