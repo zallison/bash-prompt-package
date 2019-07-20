@@ -84,7 +84,7 @@ Here's a two line prompt showing uptime, battery, and cpu temp information on to
 		 "CMD bpp_acpi"
 		 "CMD bpp_cpu_temp"
 		 "CMD bpp_text mytask"
-		 "CMDRAW bpp_notes"
+		 "CMDRAW bpp_note"
 		 "STR ${BPP_GLYPHS[NEWLINE]}${BPP_COLOR[DECORATION]}${BPP_GLYPHS[BOTTOM]}${BPP_COLOR[RESET]}"
 		 "CMD bpp_vcs"
 		 "STR ${BPP_COLOR[DECORATION]}${BPP_GLYPHS[OPEN]}${BPP_COLOR[RESET]}\w${BPP_COLOR[DECORATION]}${BPP_GLYPHS[CLOSE]}\$");
