@@ -198,16 +198,25 @@ Check the [source code](bash-prompt-package.sh) of the [functions](#all-function
 
 Example:
 
-	function bpp_date {
-		if [[ ${BPP_ENABLED[DATE]} == 1 ]]; then
-			echo "${BPP_COLOR[INFO]}$(date +${BPP_DATE_FORMAT})"
+	function bpp_scriptcount {
+		if [[ ${BPP_ENABLED[SCRIPTCOUNT]} == 1 ]]; then
+			echo "$(ls -l *sh | wc -l) bash files"
 		fi
 	}
+
+or declare it in a STR:
+
+    "STR $(ls -l *sh | wc -l) bash files"
 
 or set a "text" object: `CMD bpp_text mytext` and then:
 
 	bpp-text "\$(ls -1 *sh | wc -l) bash files" mytext
 
-And boom, your prompt tells you how many bash files are in the current directory.  Couldn't be easier!
+And boom, your prompt tells you how many bash files are in the current
+directory.  `Functions` obviously allow you much greater flexibility in
+processing, including the ability to disable it. `STR` have the
+advantage of simplicity, while the `text object` allows easy changes
+from the command line.  Whichever offers the advantages you need, use
+that!
 
 See?  Get started!
