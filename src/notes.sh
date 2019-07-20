@@ -15,7 +15,7 @@ function bpp_note {
     fi
 
     if [[ "${BPP_DATA[OLDPWD]}" == "$PWD" ]]; then
-	if [[ "BPP_OPTIONS[NOTE_ON_ENTRY]" == 1 ]]; then
+	if [ "${BPP_OPTIONS[NOTE_ON_ENTRY]}" == "1" ]; then
 	    return
 	fi
     fi
