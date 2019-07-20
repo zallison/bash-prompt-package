@@ -34,6 +34,16 @@ function bpp_mk_bgcolor { echo "\033[48;5;${1}m"; }
 # Reset
 BPP_COLOR[RESET]=$(bpp_ps1_escape "\033[m")
 
+# Options (depends on terminal support)
+BPP_COLOR[BOLD]="\[\033[1m\]"
+BPP_COLOR[DIM]="\[\033[2m\]"
+BPP_COLOR[UNDERLINED]="\[\033[4m\]"
+BPP_COLOR[BLINK]="\[\033[7m\]"
+BPP_COLOR[INVERT]="\[\033[8m\]"
+
+export BPP_COLOR BPP_BGCOLOR
+
+
 ## Named Colors for 0-15
 # Foreground
 BPP_COLOR[BLACK]=$(bpp_mk_prompt_color 0)
@@ -70,17 +80,7 @@ BPP_BGCOLOR[BRIGHTBLUE]=$(bpp_mk_prompt_bgcolor 12)
 BPP_BGCOLOR[BRIGHTPURPLE]=$(bpp_mk_prompt_bgcolor 13)
 BPP_BGCOLOR[BRIGHTCYAN]=$(bpp_mk_prompt_bgcolor 14)
 BPP_BGCOLOR[WHITE]=$(bpp_mk_prompt_bgcolor 15)
-
-# Options (depends on terminal support)
-BPP_COLOR[BOLD]="\[\033[1m\]"
-BPP_COLOR[DIM]="\[\033[2m\]"
-BPP_COLOR[UNDERLINED]="\[\033[4m\]"
-BPP_COLOR[BLINK]="\[\033[7m\]"
-BPP_COLOR[INVERT]="\[\033[8m\]"
-
-export BPP_COLOR BPP_BGCOLOR
-
-# Options
+# Term Options
 if [[ $TERM = *256* ]]; then
     BPP_COLOR[DECORATION]=${BPP_COLOR[RESET]}$(bpp_mk_prompt_color 25) # blue-ish
     BPP_COLOR[GOOD]="$(bpp_mk_prompt_color 47)" # Bright green
@@ -94,7 +94,6 @@ else
     BPP_COLOR[CRITICAL]=${BPP_COLOR[BRIGHTRED]}
     BPP_COLOR[INFO]=${BPP_COLOR[GREY]}
 fi
-
 
 # BPP Environment Options
 
@@ -529,21 +528,6 @@ function bpp_super_git {
 	fi
     done <<< $(git status --porcelain | grep ^??)
 }
-
-
-### Set prompt based on term size
-if [ $COLUMNS -lt 80 ]; then
-    BPP_ENABLED[ERROR]=0
-    if [ $COLUMNS -lt 40 ]; then
-	bpp-simple-prompt
-    else
-	bpp-compact-prompt
-    fi
-else
-    bpp-fancy-prompt
-fi
-
-
 
 function bpp_venv {
     local envpath
