@@ -2,6 +2,8 @@
 
 Bash prompt customization made easy!
 
+[Intro](#Intro)
+
 [Examples](#examples)
 
 [Built In Example Prompts](#built-in-prompts)
@@ -9,6 +11,21 @@ Bash prompt customization made easy!
 [All Functions](#all-functions)
 
 [More Info](#more-info)
+
+
+## Intro
+
+Have you ever tried to customize your bash prompt?  Trying to get the
+information you want, the colors right, and deal with the bizarre
+escape sequences required by $PS1?
+
+It can take ages, and even when you're done you end up with some
+"issues", like scrolling through command history messes up the display.
+
+BPP takes the power of the bash prompt, exposes it in an easy to use
+way, and extends the built in functionality with a suite of extra
+tools to make sure that you can quickly build a working customized
+prompt showing you the information you need to be more productive.
 
 ---
 
@@ -159,7 +176,7 @@ There are some commands that don't add anything to the prompt but are still usef
 
 ## More Info
 
-Most functions will degrade gracefully, and can be controlled by environment variables.  For example to turn off display of the "date" module try `export BPP_DATE=0`
+Most functions will degrade gracefully, and can be controlled by environment variables.  For example to turn off display of the "date" module try `BPP_ENABLED[DATE]=0`
 
 Each element is run through a "decorator" function, the built in one simple surronds the text with "❰" and "❱".  I'm sure someone out there can find a better use.
 
