@@ -111,6 +111,7 @@ BPP_ENABLED[ERROR]=1
 BPP_ENABLED[ACPI]=1
 BPP_ENABLED[SET_TITLE]=1
 BPP_ENABLED[EMACS]=1
+BPP_ENABLED[NOTES]=1
 
 BPP_OPTIONS[UPTIME_BLOCK]=0 # A "graph" type display.
 BPP_OPTIONS[UPTIME_SEPERATOR]="${BPP_COLOR[RESET]} "
@@ -764,7 +765,7 @@ fi
 function bpp_note {
     local PWD
     PWD=$(pwd)
-    if [[ ! -z "$BPP_NOTE" && "$BPP_NOTE" == 0 ]]; then
+    if [[ "$BPP_ENABLED[NOTE]" == 0 ]]; then
 	return
     fi
 
@@ -791,7 +792,7 @@ function bpp-note {
     local MESSAGE=$1
     local DIR=${2:-$(pwd)}
     BPP_NOTES[$DIR]=$MESSAGE
-    BPP_DATA[OLDPWD]=$(pwd)
+    BPP_DATA[OLDPWD]=""
     _bpp_note_save
 }
 alias _bpp_note=bpp-note

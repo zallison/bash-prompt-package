@@ -10,7 +10,7 @@ fi
 function bpp_note {
     local PWD
     PWD=$(pwd)
-    if [[ ! -z "$BPP_NOTE" && "$BPP_NOTE" == 0 ]]; then
+    if [[ "$BPP_ENABLED[NOTE]" == 0 ]]; then
 	return
     fi
 
@@ -37,7 +37,7 @@ function bpp-note {
     local MESSAGE=$1
     local DIR=${2:-$(pwd)}
     BPP_NOTES[$DIR]=$MESSAGE
-    BPP_DATA[OLDPWD]
+    BPP_DATA[OLDPWD]=""
     _bpp_note_save
 }
 alias _bpp_note=bpp-note
