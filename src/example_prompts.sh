@@ -25,7 +25,9 @@ function bpp-fancy-prompt {
 	 "CMD bpp_acpi"
 	 "CMD bpp_venv"
 	 "CMD bpp_cpu_temp"
+	 "CMD bpp_text top"
 	 "STR ${BPP_GLYPHS[NEWLINE]}${BPP_COLOR[DECORATION]}${BPP_GLYPHS[BOTTOM]}${BPP_COLOR[RESET]}"
+	 "CMD bpp_text bottom"
 	 "CMD bpp_vcs"
 	 "STR ${BPP_COLOR[DECORATION]}${BPP_GLYPHS[OPEN]}${BPP_COLOR[RESET]}\w${BPP_COLOR[DECORATION]}${BPP_GLYPHS[CLOSE]}\$")
 }

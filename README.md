@@ -42,7 +42,7 @@ If you can't remember what your prompt is you can see it with `bpp-show-prompt`.
 
 ## Examples
 
-how about some examples?
+How about some examples?  You set the array `BPP` to contain the elements you want in your prompt.  You probably want to do this in a `.bashrc` or something similar.  Also, this means you can modify it on the fly.
 
 ---
 
@@ -152,7 +152,7 @@ There are some commands that don't add anything to the prompt but are still usef
 
 `bpp-compact-prompt`- For when you have limited space and need limited info
 
-`bpp-fancy-prompt`- A nice daily driver
+`bpp-fancy-prompt`- A nice daily driver in the making.  Fully loaed.  Turn off unwanted elements with `bpp-disable <module>`.  Also has two `bpp_text` areas "top" and "bottom".  Try playing with them by checking the `bpp_text` documentation below
 
 `bpp-super-git-prompt` - More git info than you'll ever need!
 
@@ -176,7 +176,11 @@ There are some commands that don't add anything to the prompt but are still usef
 
 `bpp_set_title` - Send the escape sequence to set the title for xterm, screen, tmux etc.
 
-`bpp_text <id>` - Show the text value id, set with `bpp-text "some message" myid` unset with `bpp-untext myid`, or by set the variable diretly at BPP_NOTES[id]. **ESCAPED VARIABLES WILL BE EVALUATED**, e.g: `bpp-text "host: \$DOCKER_HOST"` will eval DOCKER_HOST on display  It is colored with BPP_COLOR[INFO].
+`bpp_text <id>` - Show the text value id, set with `bpp-text "some message" myid` unset with `bpp-untext myid`, or by set the variable diretly at BPP_NOTES[id]. **ESCAPED VARIABLES WILL BE EVALUATED**
+
+ - `bpp-text "host: \$DOCKER_HOST" top` will eval DOCKER_HOST on display  It is colored with BPP_COLOR[INFO].
+ - `bpp-text "\$(fortune -s | tr -d \$'\n')" top` - Display a fortune
+ - `bpp-text '$BPP_BOTTOM' bottom ; export BPP_BOTTOM="Goodbye, world!"` - Set a variable, upate the prompt.
 
 `bpp_uptime` - Show and colorize uptime values
 
@@ -188,7 +192,7 @@ There are some commands that don't add anything to the prompt but are still usef
 
 ## More Info
 
-Most functions will degrade gracefully, and can be controlled by environment variables.  For example to turn off display of the "date" module try `BPP_ENABLED[DATE]=0`
+Most functions will degrade gracefully, and can be controlled by environment variables.  For example to turn off display of the "date" module try `BPP_ENABLED[DATE]=0` or use the provided function `bpp-disable DATE` and re-enable with `bpp-enable DATE`. The `bpp-enable/disable`commands have tab completion.
 
 Each element is run through a "decorator" function, the built in one simple surronds the text with "❰" and "❱".  I'm sure someone out there can find a better use.
 

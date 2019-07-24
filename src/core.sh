@@ -13,7 +13,41 @@ function prompt_command {
 }
 export PROMPT_COMMAND=prompt_command
 
+function bpp-disable { BPP_ENABLED[$1]=0; }
+function bpp-enable  { BPP_ENABLED[$1]=1; }
+function bpp-options  { BPP_OPTIONS[$1]=$2; }
 
+function _bpp_options {
+    KEYS=$(for i in "${!BPP_OPTIONS[@]}"; do
+	       echo $i;
+	   done)
+    mapfile -t COMPREPLY < <(compgen -W "$KEYS" "$2")
+    return 0
+}
+
+function _bpp_enable {
+    KEYS=$(for i in "${!BPP_ENABLED[@]}"; do
+	       if [ ${BPP_ENABLED[$i]} == 0 ]; then
+		   echo "$i";
+	       fi
+	   done)
+    mapfile -t COMPREPLY < <(compgen -W "$KEYS" "$2")
+    return 0
+}
+
+function _bpp_disable {
+    KEYS=$(for i in "${!BPP_ENABLED[@]}"; do
+	       if [ ${BPP_ENABLED[$i]} == 1 ]; then
+		   echo "$i";
+	       fi
+	   done)
+    mapfile -t COMPREPLY < <(compgen -W "$KEYS" "$2")
+    return 0
+}
+
+complete -F _bpp_enable bpp-enable
+complete -F _bpp_disable bpp-disable
+complete -F _bpp_options bpp-options
 
 # Commands:
 #   CMD - run command and append result to PS1, with decoration
