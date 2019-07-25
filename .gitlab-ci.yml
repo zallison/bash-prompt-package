@@ -5,4 +5,4 @@ before_script:
 
 bats_check:
   script:
-    - make tests
+    - make test
