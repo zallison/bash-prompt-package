@@ -531,11 +531,10 @@ function bpp-fancy-prompt {
 
 function bpp-super-git-prompt {
     bpp-fancy-prompt
-    BPP[13]=${BPP[11]} # Keep the STR as the last element
-    BPP[10]="STR \${BPP_GLYPHS[NEWLINE]}"
-    BPP[11]="CMDRAW bpp_super_git"
-    BPP[12]="STR \${BPP_GLYPHS[NEWLINE]}${BPP_COLOR[DECORATION]}\${BPP_GLYPHS[BOTTOM]}${BPP_COLOR[RESET]}"
-    BPP[13]="STR ${BPP_COLOR[DECORATION]}\${BPP_GLYPHS[OPEN]}${BPP_COLOR[RESET]}\w${BPP_COLOR[DECORATION]}\${BPP_GLYPHS[CLOSE]}\$"
+    BPP[12]=${BPP[11]} # Keep the STR as the last element
+    BPP[10]="CMDRAW bpp_super_git"
+    BPP[11]="STR \${BPP_GLYPHS[NEWLINE]}${BPP_COLOR[DECORATION]}\${BPP_GLYPHS[BOTTOM]}${BPP_COLOR[RESET]}"
+
 }
 
 function bpp_super_git {
@@ -551,7 +550,7 @@ function bpp_super_git {
     COLORED_BRANCH=$(_show_git_status)
     ORIGIN=$(git remote -v | grep ${REMOTE} | head -n1 | awk '{print $2}')
 
-    echo -n ${BPP_COLOR[DECORATION]}${BPP_GLYPHS[MIDDLE]} branch: ${COLORED_BRANCH}${BPP_GLYPHS[NBS]}
+    echo -n ${BPP_GLYPHS[NEWLINE]}${BPP_COLOR[DECORATION]}${BPP_GLYPHS[MIDDLE]} branch: ${COLORED_BRANCH}${BPP_GLYPHS[NBS]}
     echo ${BPP_COLOR[DECORATION]}remote: ${BPP_COLOR[WARNING]}${REMOTE}${BPP_COLOR[RESET]}
     echo ${BPP_COLOR[DECORATION]}${BPP_GLYPHS[MIDDLE]} ${REMOTE}: ${BPP_COLOR[WARNING]}${ORIGIN}${BPP_COLOR[RESET]}
 
