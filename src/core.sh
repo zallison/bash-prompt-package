@@ -64,6 +64,8 @@ function bpp_exec_module {
     declare RET=""
     case $CMD in
 	CMD) RET=$(${BPP_DATA[DECORATOR]} $($ARGS $INDEX));;
+	CMDNL) RET=$(${BPP_DATA[DECORATOR]} $($ARGS $INDEX));
+	       [ -n "$RET" ] && RET=${RET}${BPP_GLYPHS[NEWLINE]};;
 	CMDRAW) RET=$($ARGS $INDEX);;
 	STRDEC) if [ "$ARGS" ]; then RET=$(${BPP_DATA[DECORATOR]} ${BPP_COLOR[INFO]}$ARGS;);fi;;
 	STR) RET="$ARGS";;
