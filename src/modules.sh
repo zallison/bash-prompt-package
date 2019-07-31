@@ -65,16 +65,37 @@ function bpp_user_and_host {
     echo $USERatHOST
 }
 
+declare -a BPP_ERRORS
+BPP_ERRORS[1]="General error"
+BPP_ERRORS[2]="Missing keyword, command, or permission problem"
+BPP_ERRORS[126]="Permission problem or command is not an executable"
+BPP_ERRORS[127]="Command not found"
+BPP_ERRORS[128]="Invalid argument to exit"
+BPP_ERRORS[129]="Fatal error signal 1"
+BPP_ERRORS[130]="Script terminated by Control-C"
+BPP_ERRORS[131]="Fatal error signal 3"
+BPP_ERRORS[132]="Fatal error signal 4"
+BPP_ERRORS[133]="Fatal error signal 5"
+BPP_ERRORS[134]="Fatal error signal 6"
+BPP_ERRORS[135]="Fatal error signal 7"
+BPP_ERRORS[136]="Fatal error signal 8"
+BPP_ERRORS[137]="Fatal error signal 9"
+
 function bpp_error {
-    if [[ "${BPP_ENABLED[ERROR]}" -eq "1" ]]; then
-	if [[ "${BPP_DATA[EXIT_STATUS]}" -eq "0" || "${BPP_DATA[EXIT_STATUS]}" == "130" ]]; then
-	    EXIT=""
-	else
-	    EXIT="${BPP_COLOR[CRITICAL]}❌ [err: ${BPP_DATA[EXIT_STATUS]}] ❌${WHITE}"
-	fi
+    (( BPP_ENABLED[ERROR] )) || return
+    (( BPP_DATA[EXIT_STATUS] )) || return
+
+    local ERR=${BPP_DATA[EXIT_STATUS]}
+    local EXIT
+
+    if [[ "${BPP_DATA[EXIT_STATUS]}" -gt 255 ]]; then
+	EXIT="${BPP_COLOR[CRITICAL]}❌ [err: Invalid Exit Status ${ERR}] ❌${WHITE}"
     else
-	EXIT=""
+	local MESSAGE
+	(( BPP_OPTIONS[VERBOSE_ERROR] )) && MESSAGE=" - ${BPP_ERRORS[$ERR]}"
+	EXIT="${BPP_COLOR[CRITICAL]}❌ [err: ${BPP_DATA[EXIT_STATUS]}] ${MESSAGE} ❌${WHITE}"
     fi
+
     echo $EXIT
 }
 
