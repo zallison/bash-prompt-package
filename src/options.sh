@@ -23,6 +23,7 @@ BPP_OPTIONS[DATE_FORMAT]="%I:%M"
 BPP_OPTIONS[VENV_PATHS]="venv env virtual-env .venv .environment environment"
 BPP_OPTIONS[NOTE_ON_ENTRY]=1
 BPP_OPTIONS[NOTE_FILE]="${HOME}/.bppnotes"
+BPP_OPTIONS[VERBOSE_ERROR]=1
 
 BPP_DATA[OLDPWD]=""
 BPP_DATA[DECORATOR]="bpp_decorate" # Command to "decorate" text.  By
