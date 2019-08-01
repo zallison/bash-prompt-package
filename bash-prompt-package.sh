@@ -283,7 +283,6 @@ function bpp_user_and_host {
 	HOSTCOLOR=${BPP_COLOR[CRITICAL]}
     fi
     if [[ -n "$SSH" || "${BPP_OPTIONS[HOST_LOCAL]}" != "0" ]]; then
-	echo "${BPP_OPTIONS[HOST_LOCAL]}"
 	USERatHOST="${USERCOLOR}${USER}${BPP_COLOR[DECORATION]}@${HOSTCOLOR}\h"
     else
 	USERatHOST="${USERCOLOR}${USER}"
@@ -521,8 +520,6 @@ function bpp_text {
 	echo "${BPP_COLOR[INFO]}${BPP_TEXT[$KEY]}"
     fi
 }
-
-
 ### Prompt Examples
 
 function bpp-simple-prompt {
