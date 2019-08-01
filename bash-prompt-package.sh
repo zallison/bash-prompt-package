@@ -671,26 +671,25 @@ function _bpp-venv {
     return 0
 }
 complete -F _bpp-venv bpp-venv
-
 function bpp_vcs {
     INDEX=$1
     local VCS_TYPE
 
     if [[ -z "$BPP_ENABLED[VCS]" || ${BPP_ENABLED[VCS]} == 0 ]]; then
-	VCS=""
+        VCS=""
     elif [ -e .svn ] ; then
-	VCS=$(bpp_svn)
-	VCS_TYPE="svn"
+        VCS=$(bpp_svn)
+        VCS_TYPE="svn"
     elif [[ $(git status 2> /dev/null) ]]; then
-	VCS=$(bpp_git)
-	VCS_TYPE="git"
+        VCS=$(bpp_git)
+        VCS_TYPE="git"
     fi
     if [[ $VCS ]]; then
-	if [[ ${BPP_ENABLED[VCS_TYPE]} == 0 ]]; then
-	    VCS="${VCS}"
-	else
-	    VCS="${VCS_TYPE} ${VCS}"
-	fi
+        if [[ ${BPP_ENABLED[VCS_TYPE]} == 0 ]]; then
+            VCS="${VCS}"
+        else
+            VCS="${VCS_TYPE} ${VCS}"
+        fi
     fi
 
     echo ${VCS}
@@ -700,92 +699,117 @@ function bpp_svn {
     local SVN_STATUS
     SVN_STATUS=$(svn info 2>/dev/null)
     if [[ $SVN_STATUS != "" ]] ; then
-	local REFS
-	REFS=" $(svn info | grep "Repository Root" | sed 's/.*\///')"
-	MODS=$(svn status | sed 's/ .*//' | grep -cE ^"(M|A|D)")
-	if [[ ${MODS} != "0" ]] ; then
-	    SVN="${BLUE}svn:$REFS ${BPP_COLOR[CRITICAL]}m:${MODS}" # Modified
-	else
-	    SVN="${BLUE}svn:$REFS"
-	fi
+        local REFS
+        REFS=" $(svn info | grep "Repository Root" | sed 's/.*\///')"
+        MODS=$(svn status | sed 's/ .*//' | grep -cE ^"(M|A|D)")
+        if [[ ${MODS} != "0" ]] ; then
+            SVN="${BLUE}svn:$REFS ${BPP_COLOR[CRITICAL]}m:${MODS}" # Modified
+        else
+            SVN="${BLUE}svn:$REFS"
+        fi
     fi
     echo $SVN
 }
 
-function bpp_git() {
-    REMOTE=$(git remote -v | head -n1 | awk '{print $2}' | sed 's/.*\///' | sed 's/\.git//')
-    if [[ ! $REMOTE ]]; then
-	REMOTE=local
+function bpp_git_shortstat() {
+    (( BPP_ENABLED[VCS] == 1)) || return 0
+    BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+    [[ "$BRANCH" ]] || return 0
+
+    local STATS MODIFIED INSERTED DELETED
+
+    STATS=$(git diff --shortstat 2> /dev/null)
+
+    local CHANGE_REGEX="([0-9]+) files? changed"
+    if [[ $STATS =~ ${CHANGE_REGEX} ]]; then
+        MODIFIED="${BASH_REMATCH[1]}"
     fi
-    STATUS=$(_show_git_status)
-    DETAILS=$(git status --porcelain -u -b 2>/dev/null \
-		  | awk 'BEGIN {ORS=" "}NR>1{arr[$1]++}END{for (a in arr) print a":", arr[a]}' | sed 's/ $//')
+
+    local INSERT_REGEX="([0-9]+) insertion"
+    if [[ $STATS =~ ${INSERT_REGEX} ]]; then
+        INSERTED="${BASH_REMATCH[1]}"
+    fi
+
+    local DELETE_REGEX="([0-9]+) deletion"
+    if [[ $STATS =~ ${DELETE_REGEX} ]]; then
+        DELETED="${BASH_REMATCH[1]}"
+    fi
+
+    if [[ -z "$MODIFIED" ]]; then
+        return
+    else
+        echo "${BPP_COLOR[INFO]}${MODIFIED:-0},${BPP_COLOR[GOOD]}+${INSERTED:-0}${BPP_COLOR[INFO]},${BPP_COLOR[RED]}-${DELETED:-0}"
+    fi
+
+}
+
+function bpp_git() {
+    (( BPP_ENABLED[VCS] == 1)) || return
+
+    GIT="";
+    STATUS=$(bpp_git_status)
+    DETAILS=$(bpp_git_shortstat)
     if [[ $DETAILS ]]; then
-	STATUS="${STATUS} ${DETAILS}";
+        STATUS="${STATUS} ${DETAILS}";
     fi
     if [[ ${BPP_ENABLED[VCS_REMOTE]} == 1 ]]; then
-	GIT="${BPP_COLOR[RESET]}$REMOTE: $STATUS";
+        REMOTE=$(git remote -v | head -n1 | awk '{print $2}' | sed 's/.*\///' | sed 's/\.git//')
+        if [[ ! $REMOTE ]]; then
+            REMOTE=local
+        fi
+        GIT="${BPP_COLOR[RESET]}$REMOTE: $STATUS";
     else
-	GIT="${BPP_COLOR[RESET]}$STATUS";
+        GIT="${BPP_COLOR[RESET]}$STATUS";
     fi
     echo $GIT
 }
 
-function _show_git_status() {
-    # Get the current git branch and colorize to indicate branch state
-    # branch_name+ indicates there are stash(es)
-    # branch_name? indicates there are untracked files
-    # branch_name! indicates your branches have diverged
-    local unknown untracked stash clean ahead behind staged dirty diverged
-    unknown=${BPP_COLOR[GOOD]}
-    untracked=${BPP_COLOR[GOOD]}
-    stash=${BPP_COLOR[GOOD]}
-    clean=${BPP_COLOR[GOOD]}
-    ahead=${BPP_COLOR[WARNING]}
-    behind=${BPP_COLOR[WARNING]}
-    staged=${UNDERLINED}${BPP_COLOR[WARNING]}
-    dirty=${BPP_COLOR[WARNING]}
-    diverged=${RED}
+function bpp_git_status() {
+    command -v git 2>&1 > /dev/null || return
+    local branch flags color
+    branch=$(git rev-parse --abbrev-ref HEAD  2>/dev/null)
+    if [[ -n "$branch" ]]; then
+	git_status=$(git status 2> /dev/null)
+	# If nothing changes the color, we can spot unhandled cases.
+	color=${BPP_COLOR[INFO]}
 
-    if [ "$(command -v git)" ]; then
-	branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
-	if [[ -n "$branch" ]]; then
-	    git_status=$(git status 2> /dev/null)
-	    # If nothing changes the color, we can spot unhandled cases.
-	    color=$unknown
-	    if [[ $git_status =~ 'Untracked files' ]]; then
-		color=$untracked
-		branch="${branch}?"
-	    fi
-	    if git stash show &>/dev/null; then
-		color=$stash
-		branch="${branch}*"
-	    fi
-	    if [[ $git_status =~ 'working directory clean' ]]; then
-		color=$clean
-	    fi
-	    if [[ $git_status =~ 'Your branch is ahead' ]]; then
-		color=$ahead
-		branch="${branch}>"
-	    fi
-	    if [[ $git_status =~ 'Your branch is behind' ]]; then
-		color=$behind
-		branch="${branch}<"
-	    fi
-	    if [[ $git_status =~ 'Changes to be committed' ]]; then
-		color=$staged
-	    fi
-	    if [[ $git_status =~ 'Changed but not updated' ||
-		      $git_status =~ 'Changes not staged'      ||
-		      $git_status =~ 'Unmerged paths' ]]; then
-		color=$dirty
-	    fi
-	    if [[ $git_status =~ 'Your branch'.+diverged ]]; then
-		color=$diverged
-		branch="${branch}!"
-	    fi
-	    echo -n "${color}${branch}${BPP_COLOR[RESET]}"
+	if [[ $git_status =~ 'working tree clean' ]]; then
+	    color=${BPP_COLOR[GOOD]}
 	fi
+	if [[ $git_status =~ 'Untracked files' ]]; then
+	    color=${BPP_COLOR[WARNING]}
+	    flags+="U"
+	fi
+	if git stash show 2>/dev/null; then
+	    flags+="*"
+	fi
+	if [[ $git_status =~ 'Your branch is ahead' ]]; then
+	    color=${BPP_COLOR[WARNING]}
+	    flags+=">"
+	fi
+	if [[ $git_status =~ 'Changes to be committed' ]]; then
+	    color=${BPP_COLOR[WARNING]}
+	    flags+="^"
+	fi
+	if [[ $git_status =~ 'Changed but not updated' ||
+		  $git_status =~ 'Changes not staged'      ||
+		  $git_status =~ 'Unmerged paths' ]]; then
+	    color=${BPP_COLOR[WARNING]}
+	    flags+="!"
+	fi
+	if [[ $git_status =~ 'Your branch'.+diverged ]]; then
+	    color=${BPP_COLOR[CRITICAL]}
+	    flags+="{"
+	fi
+	if [[ $git_status =~ 'Your branch is behind' ]]; then
+	    color=${BPP_COLOR[CRITICAL]}
+	    flags+="<"
+	fi
+
+	if [[ -n "${flags}" ]]; then
+	    flags=":${flags}"
+	fi
+	echo -n "${color}${branch}${flags}${BPP_COLOR[RESET]}"
     fi
     return 0
 }
