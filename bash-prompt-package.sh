@@ -774,6 +774,9 @@ function bpp_git_status() {
 	# If nothing changes the color, we can spot unhandled cases.
 	color=${BPP_COLOR[INFO]}
 
+	if [[ $(git stash show >/dev/null 2>/dev/null) ]]; then
+	    flags+="*"
+	fi
 	if [[ $git_status =~ 'working tree clean' ]]; then
 	    color=${BPP_COLOR[GOOD]}
 	fi
@@ -781,19 +784,18 @@ function bpp_git_status() {
 	    color=${BPP_COLOR[WARNING]}
 	    flags+="U"
 	fi
-	if git stash show >/dev/null 2>/dev/null; then
-	    flags+="*"
-	fi
 	if [[ $git_status =~ 'Your branch is ahead' ]]; then
 	    color=${BPP_COLOR[WARNING]}
 	    flags+=">"
 	fi
 	if [[ $git_status =~ 'Changes to be committed' ]]; then
 	    color=${BPP_COLOR[WARNING]}
-	    flags+="^"
+	    flags+="S"
+	fi
+	if [[ $git_status =~ 'Changes not staged' ]]; then
+	    color=${BPP_COLOR[WARNING]}
 	fi
 	if [[ $git_status =~ 'Changed but not updated' ||
-		  $git_status =~ 'Changes not staged'      ||
 		  $git_status =~ 'Unmerged paths' ]]; then
 	    color=${BPP_COLOR[WARNING]}
 	    flags+="!"
