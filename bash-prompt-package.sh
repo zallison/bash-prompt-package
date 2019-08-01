@@ -98,36 +98,38 @@ fi
 # BPP Environment Options
 
 # These can be turned off at runtime to disable a running module
-BPP_ENABLED[USER]=1
-BPP_ENABLED[UPTIME]=1
+BPP_ENABLED[ACPI]=1
 BPP_ENABLED[DATE]=1
-BPP_ENABLED[TEMP]=1
 BPP_ENABLED[DIRINFO]=1
+BPP_ENABLED[EMACS]=1
+BPP_ENABLED[ERROR]=1
+BPP_ENABLED[NOTES]=1
+BPP_ENABLED[SET_TITLE]=1
+BPP_ENABLED[TEMP]=1
+BPP_ENABLED[UPTIME]=1
+BPP_ENABLED[USER]=1
 BPP_ENABLED[VCS]=1
 BPP_ENABLED[VCS_REMOTE]=0
 BPP_ENABLED[VCS_TYPE]=0
 BPP_ENABLED[VENV]=1
-BPP_ENABLED[ERROR]=1
-BPP_ENABLED[ACPI]=1
-BPP_ENABLED[SET_TITLE]=1
-BPP_ENABLED[EMACS]=1
-BPP_ENABLED[NOTES]=1
 
+BPP_OPTIONS[ACPI_HIDE_ABOVE]=65
+BPP_OPTIONS[DATE_FORMAT]="%I:%M"
 BPP_OPTIONS[HOST_LOCAL]=1
+BPP_OPTIONS[NOTE_FILE]="${HOME}/.bppnotes"
+BPP_OPTIONS[NOTE_ON_ENTRY]=1
+BPP_OPTIONS[TEMP_CRIT]=65
+BPP_OPTIONS[TEMP_WARN]=55
+BPP_OPTIONS[TEMP_HIDE_BELOW]=50
 BPP_OPTIONS[UPTIME_BLOCK]=0 # A "graph" type display.
 BPP_OPTIONS[UPTIME_SEPERATOR]="${BPP_COLOR[RESET]} "
 BPP_OPTIONS[USER]="user"
-BPP_OPTIONS[DATE_FORMAT]="%I:%M"
 BPP_OPTIONS[VENV_PATHS]="venv env virtual-env .venv .environment environment"
-BPP_OPTIONS[NOTE_ON_ENTRY]=1
-BPP_OPTIONS[NOTE_FILE]="${HOME}/.bppnotes"
 BPP_OPTIONS[VERBOSE_ERROR]=1
 
 BPP_DATA[OLDPWD]=""
 BPP_DATA[DECORATOR]="bpp_decorate" # Command to "decorate" text.  By
 				   # default wraps it in ❰ and ❱
-
-BPP_DATA[DECORATOR]=bpp_decorate
 
 # Bash Options
 export PROMPT_DIRTRIM=3
@@ -393,32 +395,36 @@ function bpp_send_emacs_path_info() {
 }
 
 function bpp_acpi {
-    if [[ ! -z "$BPP_ENABLED[ACPI]" && ${BPP_ENABLED[ACPI]} != 0 ]]; then
-	ACPI=$(acpi 2>/dev/null | head -1 | awk '{print $3 $4}' | tr ,% \ \ )
-	BATTERY_LEVEL=${ACPI#* }
-	CHARGE_STATUS=${ACPI/ *}
-	if [ -z $BATTERY_LEVEL ]; then
-	    BPP_ENABLED[ACPI]=0
-	    return
-	fi
-	CHARGE_ICON=""
-	BATTERY_DISP=""
-	BLOCK=""
-	case $CHARGE_STATUS in
-	    "Discharging") CHARGE_ICON="${BPP_COLOR[WARNING]}${BPP_GLYPHS[DOWNARROW]}${BPP_COLOR[RESET]}";;
-	    "Charging")    CHARGE_ICON="${BPP_COLOR[GOOD]}${BPP_GLYPHS[ZAP]}${BPP_COLOR[RESET]}";;
-	    *)           CHARGE_ICON="${BPP_COLOR[GOOD]}$CHARGE_STATUS${BPP_COLOR[RESET]}";;
-	esac
-	CHARGE_ICON="${CHARGE_ICON}"
-	BLOCK=$(bpp_get_block_height $BATTERY_LEVEL)
-	case $BATTERY_LEVEL in
-	    100* | [98765]*) BATTERY_DISP="${BPP_COLOR[GOOD]}";;
-	    [432]*) BATTERY_DISP="${BPP_COLOR[WARNING]}";;
-	    *) BATTERY_DISP="${BPP_COLOR[CRITICAL]}";;
-	esac
-	BATTERY_DISP+="${BLOCK} ${BATTERY_LEVEL}"
-	echo "${BATTERY_DISP}${CHARGE_ICON}${BPP_COLOR[RESET]}"
+    (( BPP_ENABLED[ACPI] )) || return
+    local ACPI BATTERY_LEVEL CHARGE_STATUS CHARGE_ICON BATTERY_DISP BLOCK
+    ACPI=$(acpi 2>/dev/null | head -1 | awk '{print $3 $4}' | tr ,% \ \ )
+    BATTERY_LEVEL=${ACPI#* }
+    CHARGE_STATUS=${ACPI/ *}
+    if [[ ${BPP_OPTIONS[ACPI_HIDE_ABOVE]} &&
+	      "${BATTERY_LEVEL}" -gt "${BPP_OPTIONS[ACPI_HIDE_ABOVE]}" ]]; then
+	return
+    fi    
+    if [ -z $BATTERY_LEVEL ]; then
+	BPP_ENABLED[ACPI]=0
+	return
     fi
+    CHARGE_ICON=""
+    BATTERY_DISP=""
+    BLOCK=""
+    case $CHARGE_STATUS in
+	"Discharging") CHARGE_ICON="${BPP_COLOR[WARNING]}${BPP_GLYPHS[DOWNARROW]}${BPP_COLOR[RESET]}";;
+	"Charging")    CHARGE_ICON="${BPP_COLOR[GOOD]}${BPP_GLYPHS[ZAP]}${BPP_COLOR[RESET]}";;
+	*)           CHARGE_ICON="${BPP_COLOR[GOOD]}$CHARGE_STATUS${BPP_COLOR[RESET]}";;
+    esac
+    CHARGE_ICON="${CHARGE_ICON}"
+    BLOCK=$(bpp_get_block_height $BATTERY_LEVEL)
+    case $BATTERY_LEVEL in
+	100* | [98765]*) BATTERY_DISP="${BPP_COLOR[GOOD]}";;
+	[432]*) BATTERY_DISP="${BPP_COLOR[WARNING]}";;
+	*) BATTERY_DISP="${BPP_COLOR[CRITICAL]}";;
+    esac
+    BATTERY_DISP+="${BLOCK} ${BATTERY_LEVEL}"
+    echo "${BATTERY_DISP}${CHARGE_ICON}${BPP_COLOR[RESET]}"
 }
 
 function bpp_get_block_height {
@@ -462,33 +468,36 @@ function bpp_get_block_height {
 }
 
 function bpp_cpu_temp {
+    (( BPP_ENABLED[TEMP] )) || return
     local TEMP
-    if [[ ! -z "$BPP_ENABLED[TEMP]" && ${BPP_ENABLED[TEMP]} != 0 ]]; then
 
-	BPP_OPTIONS[TEMP_CRIT]=${BPP_OPTIONS[TEMP_CRIT]:-65}
-	BPP_OPTIONS[TEMP_WARN]=${BPP_OPTIONS[TEMP_WARN]:-55}
+    BPP_OPTIONS[TEMP_CRIT]=${BPP_OPTIONS[TEMP_CRIT]:-65}
+    BPP_OPTIONS[TEMP_WARN]=${BPP_OPTIONS[TEMP_WARN]:-55}
 
-	if [[ -f /sys/class/thermal/thermal_zone0/temp ]]; then
-	    TEMP=$(echo $(cat /sys/class/thermal/thermal_zone*/temp 2>/dev/null | sort -rn | head -1) 1000 / p | dc)
-	else
-	    BPP_TEMP=0 # Disable the module
-	    return
-	fi
-
-	if [[ -z $TEMP ]]; then
-	    # No attempts to get temperature were successful
-	    return
-	fi
-
-	COLOR=${BPP_COLOR[GOOD]}
-	if [ $(echo "$TEMP > ${BPP_OPTIONS[TEMP_CRIT]}" | bc) == 1 ]; then
-	    COLOR="${BPP_COLOR[CRITICAL]}"
-	elif [ $(echo "$TEMP > ${BPP_OPTIONS[TEMP_WARN]}" | bc) == 1 ]; then
-	    COLOR="${BPP_COLOR[WARNING]}"
-	fi
-	temp_status="${COLOR}$TEMP°${BPP_COLOR[RESET]}"
-	echo $temp_status
+    if [[ -f /sys/class/thermal/thermal_zone0/temp ]]; then
+	TEMP=$(echo $(cat /sys/class/thermal/thermal_zone*/temp 2>/dev/null | sort -rn | head -1) 1000 / p | dc)
+    else
+	BPP_ENABLED[TEMP]=0 # Disable the module
+	return
     fi
+
+    if [[ -z $TEMP ]]; then
+	# No attempts to get temperature were successful
+	return
+    fi
+
+    if [[ "$TEMP" -lt "${BPP_OPTIONS[TEMP_HIDE_BELOW]}" ]]; then
+	return
+    fi
+
+    COLOR=${BPP_COLOR[GOOD]}
+    if [ $(echo "$TEMP > ${BPP_OPTIONS[TEMP_CRIT]}" | bc) == 1 ]; then
+	COLOR="${BPP_COLOR[CRITICAL]}"
+    elif [ $(echo "$TEMP > ${BPP_OPTIONS[TEMP_WARN]}" | bc) == 1 ]; then
+	COLOR="${BPP_COLOR[WARNING]}"
+    fi
+    temp_status="${COLOR}$TEMP°${BPP_COLOR[RESET]}"
+    echo $temp_status
 }
 
 function bpp_history {
