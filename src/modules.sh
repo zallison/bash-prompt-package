@@ -41,27 +41,29 @@ function bpp_uptime {
 }
 
 function bpp_user_and_host {
+    (( BPP_ENABLED[USER] )) || return
+
     if [ -z "$SSH_CONNECTION" ]; then
 	# Local
 	HOSTCOLOR=${BPP_COLOR[GOOD]}
     else
 	HOSTCOLOR=${BPP_COLOR[WARNING]}
     fi
-    if [[ ${BPP_ENABLED[USER]} == 1 ]]; then
-	if [ -z "$USER" ]; then
-	    USER=${BPP_OPTIONS[USER]}
-	fi
-	if [ "$(whoami)" != "root" ]; then
-	    USERCOLOR=${BPP_COLOR[GOOD]}
-	else
-	    USERCOLOR=${BPP_COLOR[CRITICAL]}
-	    HOSTCOLOR=${BPP_COLOR[CRITICAL]}
-	fi
-
+    if [ -z "$USER" ]; then
+	USER=${BPP_OPTIONS[USER]}
+    fi
+    if [ "$(whoami)" != "root" ]; then
+	USERCOLOR=${BPP_COLOR[GOOD]}
+    else
+	USERCOLOR=${BPP_COLOR[CRITICAL]}
+	HOSTCOLOR=${BPP_COLOR[CRITICAL]}
+    fi
+    if [[ -n "$SSH" || ${BPP_OPTIONS[HOST_LOCAL]} ]]; then
 	USERatHOST="${USERCOLOR}${USER}${BPP_COLOR[DECORATION]}@${HOSTCOLOR}\h"
     else
-	USERatHOST=""
+	USERatHOST="${USERCOLOR}${USER}"
     fi
+
     echo $USERatHOST
 }
 
