@@ -107,7 +107,7 @@ function bpp_git_status() {
 	    color=${BPP_COLOR[WARNING]}
 	    flags+="U"
 	fi
-	if git stash show 2>/dev/null; then
+	if git stash show >/dev/null 2>/dev/null; then
 	    flags+="*"
 	fi
 	if [[ $git_status =~ 'Your branch is ahead' ]]; then
