@@ -102,26 +102,24 @@ function bpp_error {
 }
 
 function bpp_dirinfo {
-    if [[ ${BPP_ENABLED[DIRINFO]} == 1 ]]; then
-	FILES="$(/bin/ls -F | grep -cv /$)${BPP_COLOR[GOOD]}🖺${BPP_COLOR[RESET]}"
-	DIRSIZE="$(/bin/ls -lah | /bin/grep -m 1 total | /bin/sed 's/total //')"
-	DIRS="$(/bin/ls -F | grep -c /$)${BPP_COLOR[GOOD]}📁${BPP_COLOR[RESET]}"
-	DIRINFO="${FILES} ${DIRS} ${DIRSIZE}"
-    else
-	DIRINFO=""
-    fi
+    (( BPP_ENABLED[DIRINFO] )) || return
+
+    FILES="$(/bin/ls -F | grep -cv /$)${BPP_COLOR[GOOD]}${BPP_GLYPHS[FILE]}${BPP_COLOR[RESET]}"
+    DIRSIZE="$(/bin/ls -lah | /bin/grep -m 1 total | /bin/sed 's/total //')"
+    DIRS="$(/bin/ls -F | grep -c /$)${BPP_COLOR[GOOD]}${BPP_GLYPHS[FOLDER]}${BPP_COLOR[RESET]}"
+    DIRINFO="${FILES} ${DIRS} ${DIRSIZE}"
 
     echo $DIRINFO
 }
 
 function bpp_set_title() {
+    (( BPP_ENABLED[SET_TITLE] )) || return
+
     function set_title {
-	if [[ -z ${BPP_ENABLED[SET_TITLE]} || ${BPP_ENABLED[SET_TITLE]} != 0 ]]; then
-	    if [[ ! -z $TMUX && -z $SSH ]]; then
-		tmux rename-window -t${TMUX_PANE} "$*"
-	    elif [[ $TERM =~ screen ]]; then
-		printf "\033k %s \033\\" "$*"
-	    fi
+	if [[ ! -z $TMUX && -z $SSH ]]; then
+	    tmux rename-window -t${TMUX_PANE} "$*"
+	elif [[ $TERM =~ screen ]]; then
+	    printf "\033k %s \033\\" "$*"
 	fi
     }
 
@@ -141,11 +139,11 @@ function bpp_set_title() {
 }
 
 function bpp_send_emacs_path_info() {
+    (( BPP_ENABLED[EMACS] )) || return
+
     local ssh_hostname
     local VALIDTERM=0
-    if [ "${BPP_ENABLED[EMACS]}" -eq "0" ]; then
-	return
-    fi
+
     if [[ $LC_EMACS ]]; then
 	INSIDE_EMACS=1
     fi
