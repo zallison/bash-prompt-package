@@ -1,6 +1,6 @@
 ### Core System
 
-function prompt_command {
+function bpp_prompt_command {
     BPP_DATA[EXIT_STATUS]=$?
     PS1="${BPP_COLOR[RESET]}"
     for ((i=0; i<${#BPP[*]}; i++)); do
@@ -11,11 +11,11 @@ function prompt_command {
     PS1="${PS1}${BPP_COLOR[RESET]} "
     BPP_DATA[OLDPWD]=$(pwd)
 }
-export PROMPT_COMMAND=prompt_command
+export PROMPT_COMMAND=bpp_prompt_command
 
 function bpp-disable { BPP_ENABLED[$1]=0; }
 function bpp-enable  { BPP_ENABLED[$1]=1; }
-function bpp-options  { BPP_OPTIONS[$1]=$2; }
+function bpp-options { BPP_OPTIONS[$1]=$2; }
 
 function _bpp_options {
     KEYS=$(for i in "${!BPP_OPTIONS[@]}"; do
@@ -51,6 +51,7 @@ complete -F _bpp_options bpp-options
 
 # Commands:
 #   CMD - run command and append result to PS1, with decoration
+#   CMDNL - run command and append result to PS1, with decoration, appends a newline
 #   EXE - Execute command, but do not add to PS1
 #   STR - Insert a string as is, without decoration
 #   STRDEC - Insert a string with decoration
@@ -65,7 +66,7 @@ function bpp_exec_module {
     case $CMD in
 	CMD) RET=$(${BPP_DATA[DECORATOR]} $($ARGS $INDEX));;
 	CMDNL) RET=$(${BPP_DATA[DECORATOR]} $($ARGS $INDEX));
-	       [ -n "$RET" ] && RET=${RET}${BPP_GLYPHS[NEWLINE]};;
+	       [ -n "$RET" ] && RET+=${BPP_GLYPHS[NEWLINE]};;
 	CMDRAW) RET=$($ARGS $INDEX);;
 	STRDEC) if [ "$ARGS" ]; then RET=$(${BPP_DATA[DECORATOR]} ${BPP_COLOR[INFO]}$ARGS;);fi;;
 	STR) RET="$ARGS";;
