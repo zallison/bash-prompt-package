@@ -14,16 +14,17 @@ declare -A BPP_BGCOLOR
 declare -A BPP_TEXT
 
 # UTF Glyphs
-BPP_GLYPHS[NEWLINE]=$'\n'
-BPP_GLYPHS[NBS]=" "
-BPP_GLYPHS[ZAP]="⚡"
-BPP_GLYPHS[DOWNARROW]="↓"
-BPP_GLYPHS[TOP]="╔"
-BPP_GLYPHS[MIDDLE]="║"
 BPP_GLYPHS[BOTTOM]="╚"
-BPP_GLYPHS[OPEN]="❰"
 BPP_GLYPHS[CLOSE]="❱"
-
+BPP_GLYPHS[DOWNARROW]="↓"
+BPP_GLYPHS[FILE]="🖺"
+BPP_GLYPHS[FOLDER]="📁"
+BPP_GLYPHS[MIDDLE]="║"
+BPP_GLYPHS[NBS]=" "
+BPP_GLYPHS[NEWLINE]=$'\n'
+BPP_GLYPHS[OPEN]="❰"
+BPP_GLYPHS[TOP]="╔"
+BPP_GLYPHS[ZAP]="⚡"
 # Colors
 function bpp_ps1_escape { echo "\[$*\]"; }
 function bpp_mk_prompt_color { bpp_ps1_escape "$(bpp_mk_color $1)"; }
@@ -137,7 +138,7 @@ export PROMPT_DIRTRIM=3
 ####### END SETTINGS #######
 ### Core System
 
-function prompt_command {
+function bpp_prompt_command {
     BPP_DATA[EXIT_STATUS]=$?
     PS1="${BPP_COLOR[RESET]}"
     for ((i=0; i<${#BPP[*]}; i++)); do
@@ -148,11 +149,11 @@ function prompt_command {
     PS1="${PS1}${BPP_COLOR[RESET]} "
     BPP_DATA[OLDPWD]=$(pwd)
 }
-export PROMPT_COMMAND=prompt_command
+export PROMPT_COMMAND=bpp_prompt_command
 
 function bpp-disable { BPP_ENABLED[$1]=0; }
 function bpp-enable  { BPP_ENABLED[$1]=1; }
-function bpp-options  { BPP_OPTIONS[$1]=$2; }
+function bpp-options { BPP_OPTIONS[$1]=$2; }
 
 function _bpp_options {
     KEYS=$(for i in "${!BPP_OPTIONS[@]}"; do
@@ -188,6 +189,7 @@ complete -F _bpp_options bpp-options
 
 # Commands:
 #   CMD - run command and append result to PS1, with decoration
+#   CMDNL - run command and append result to PS1, with decoration, appends a newline
 #   EXE - Execute command, but do not add to PS1
 #   STR - Insert a string as is, without decoration
 #   STRDEC - Insert a string with decoration
@@ -202,7 +204,7 @@ function bpp_exec_module {
     case $CMD in
 	CMD) RET=$(${BPP_DATA[DECORATOR]} $($ARGS $INDEX));;
 	CMDNL) RET=$(${BPP_DATA[DECORATOR]} $($ARGS $INDEX));
-	       [ -n "$RET" ] && RET=${RET}${BPP_GLYPHS[NEWLINE]};;
+	       [ -n "$RET" ] && RET+=${BPP_GLYPHS[NEWLINE]};;
 	CMDRAW) RET=$($ARGS $INDEX);;
 	STRDEC) if [ "$ARGS" ]; then RET=$(${BPP_DATA[DECORATOR]} ${BPP_COLOR[INFO]}$ARGS;);fi;;
 	STR) RET="$ARGS";;
@@ -300,7 +302,7 @@ BPP_ERRORS[126]="Permission problem or command is not an executable"
 BPP_ERRORS[127]="Command not found"
 BPP_ERRORS[128]="Invalid argument to exit"
 BPP_ERRORS[129]="Fatal error signal 1"
-BPP_ERRORS[130]="Script terminated by Control-C"
+BPP_ERRORS[130]="Terminated by Control-C"
 BPP_ERRORS[131]="Fatal error signal 3"
 BPP_ERRORS[132]="Fatal error signal 4"
 BPP_ERRORS[133]="Fatal error signal 5"
@@ -328,26 +330,24 @@ function bpp_error {
 }
 
 function bpp_dirinfo {
-    if [[ ${BPP_ENABLED[DIRINFO]} == 1 ]]; then
-	FILES="$(/bin/ls -F | grep -cv /$)${BPP_COLOR[GOOD]}🖺${BPP_COLOR[RESET]}"
-	DIRSIZE="$(/bin/ls -lah | /bin/grep -m 1 total | /bin/sed 's/total //')"
-	DIRS="$(/bin/ls -F | grep -c /$)${BPP_COLOR[GOOD]}📁${BPP_COLOR[RESET]}"
-	DIRINFO="${FILES} ${DIRS} ${DIRSIZE}"
-    else
-	DIRINFO=""
-    fi
+    (( BPP_ENABLED[DIRINFO] )) || return
+
+    FILES="$(/bin/ls -F | grep -cv /$)${BPP_COLOR[GOOD]}${BPP_GLYPHS[FILE]}${BPP_COLOR[RESET]}"
+    DIRSIZE="$(/bin/ls -lah | /bin/grep -m 1 total | /bin/sed 's/total //')"
+    DIRS="$(/bin/ls -F | grep -c /$)${BPP_COLOR[GOOD]}${BPP_GLYPHS[FOLDER]}${BPP_COLOR[RESET]}"
+    DIRINFO="${FILES} ${DIRS} ${DIRSIZE}"
 
     echo $DIRINFO
 }
 
 function bpp_set_title() {
+    (( BPP_ENABLED[SET_TITLE] )) || return
+
     function set_title {
-	if [[ -z ${BPP_ENABLED[SET_TITLE]} || ${BPP_ENABLED[SET_TITLE]} != 0 ]]; then
-	    if [[ ! -z $TMUX && -z $SSH ]]; then
-		tmux rename-window -t${TMUX_PANE} "$*"
-	    elif [[ $TERM =~ screen ]]; then
-		printf "\033k %s \033\\" "$*"
-	    fi
+	if [[ ! -z $TMUX && -z $SSH ]]; then
+	    tmux rename-window -t${TMUX_PANE} "$*"
+	elif [[ $TERM =~ screen ]]; then
+	    printf "\033k %s \033\\" "$*"
 	fi
     }
 
@@ -367,11 +367,11 @@ function bpp_set_title() {
 }
 
 function bpp_send_emacs_path_info() {
+    (( BPP_ENABLED[EMACS] )) || return
+
     local ssh_hostname
     local VALIDTERM=0
-    if [ "${BPP_ENABLED[EMACS]}" -eq "0" ]; then
-	return
-    fi
+
     if [[ $LC_EMACS ]]; then
 	INSIDE_EMACS=1
     fi
@@ -403,7 +403,7 @@ function bpp_acpi {
     if [[ ${BPP_OPTIONS[ACPI_HIDE_ABOVE]} &&
 	      "${BATTERY_LEVEL}" -gt "${BPP_OPTIONS[ACPI_HIDE_ABOVE]}" ]]; then
 	return
-    fi    
+    fi
     if [ -z $BATTERY_LEVEL ]; then
 	BPP_ENABLED[ACPI]=0
 	return
