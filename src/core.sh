@@ -10,6 +10,7 @@ function bpp_prompt_command {
     done
     PS1="${PS1}${BPP_COLOR[RESET]} "
     BPP_DATA[OLDPWD]=$(pwd)
+    BPP_DATA[EXIT_STATUS]=""
 }
 export PROMPT_COMMAND=bpp_prompt_command
 
