@@ -148,6 +148,7 @@ function bpp_prompt_command {
     done
     PS1="${PS1}${BPP_COLOR[RESET]} "
     BPP_DATA[OLDPWD]=$(pwd)
+    BPP_DATA[EXIT_STATUS]=""
 }
 export PROMPT_COMMAND=bpp_prompt_command
 
@@ -202,14 +203,20 @@ function bpp_exec_module {
     ARGS=$*
     declare RET=""
     case $CMD in
-	CMD) RET=$(${BPP_DATA[DECORATOR]} $($ARGS $INDEX));;
-	CMDNL) RET=$(${BPP_DATA[DECORATOR]} $($ARGS $INDEX));
+	## Execute CMD and decorate
+	CMD) RET=$(${BPP_DATA[DECORATOR]} $($ARGS));;
+	## Execute CMD and decorate, add a newline if there's any output
+	CMDNL) RET=$(${BPP_DATA[DECORATOR]} $($ARGS));
 	       [ -n "$RET" ] && RET+=${BPP_GLYPHS[NEWLINE]};;
+	## Execute CMD and do not decorator
 	CMDRAW) RET=$($ARGS $INDEX);;
+	## Take a string and decorate it
 	STRDEC) if [ "$ARGS" ]; then RET=$(${BPP_DATA[DECORATOR]} ${BPP_COLOR[INFO]}$ARGS;);fi;;
+	## A pre-formatted string.
 	STR) RET="$ARGS";;
+	## Execute a command but don't append any output to PS1
 	EXE) $ARGS;;
-	FILE) RET=$(${BPP_DATA[DECORATOR]} "$(head -1 $2)");;
+	## NOOP
 	NOOP) return;;
 	*) echo "Unknown: $CMD"
     esac
@@ -316,15 +323,15 @@ function bpp_error {
     (( BPP_DATA[EXIT_STATUS] )) || return
 
     local ERR=${BPP_DATA[EXIT_STATUS]}
-    local EXIT
+    local EXIT MESSAGE
 
     if [[ "${BPP_DATA[EXIT_STATUS]}" -gt 255 ]]; then
-	EXIT="${BPP_COLOR[CRITICAL]}❌ [err: Invalid Exit Status ${ERR}] ❌${WHITE}"
+	MESSAGE="Invalid Exit Status"
     else
-	local MESSAGE
-	(( BPP_OPTIONS[VERBOSE_ERROR] )) && MESSAGE=" - ${BPP_ERRORS[$ERR]}"
-	EXIT="${BPP_COLOR[CRITICAL]}❌ [err: ${BPP_DATA[EXIT_STATUS]}] ${MESSAGE} ❌${WHITE}"
+	MESSAGE=${BPP_DATA[EXIT_STATUS]}
+	(( BPP_OPTIONS[VERBOSE_ERROR] )) && MESSAGE+=" - ${BPP_ERRORS[$ERR]}"
     fi
+    EXIT="${BPP_COLOR[CRITICAL]}error: ${MESSAGE}"
 
     echo $EXIT
 }
@@ -522,12 +529,8 @@ function bpp-untext {
 
 function bpp_text {
     KEY=${1:-text}
-    if [ -z $2 ]; then
-	KEY=text
-    fi
-    if [ "${BPP_TEXT[$KEY]}" ]; then
+    [ ${BPP_TEXT[$KEY]+abc} ] && \
 	echo "${BPP_COLOR[INFO]}${BPP_TEXT[$KEY]}"
-    fi
 }
 ### Prompt Examples
 
@@ -726,9 +729,9 @@ function bpp_git_shortstat() {
     BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
     [[ "$BRANCH" ]] || return 0
 
-    local STATS MODIFIED INSERTED DELETED
-
-    STATS=$(git diff --shortstat 2> /dev/null)
+    local STATS MODIFIED INSERTED DELETED TARGET
+    TARGET=${1:-}
+    STATS=$(git diff --shortstat $TARGET 2> /dev/null)
 
     local CHANGE_REGEX="([0-9]+) files? changed"
     if [[ $STATS =~ ${CHANGE_REGEX} ]]; then
@@ -796,10 +799,14 @@ function bpp_git_status() {
 	if [[ $git_status =~ 'Your branch is ahead' ]]; then
 	    color=${BPP_COLOR[WARNING]}
 	    flags+=">"
+	    (( BPP_OPTIONS[GIT_STAT_AHEAD] )) && \
+		flags+="${BPP_COLOR[RESET]}($(bpp_git_shortstat HEAD~))$color"
 	fi
 	if [[ $git_status =~ 'Changes to be committed' ]]; then
 	    color=${BPP_COLOR[WARNING]}
 	    flags+="S"
+	    (( BPP_OPTIONS[GIT_STAT_STAGE] )) && \
+		flags+="${BPP_COLOR[RESET]}($(bpp_git_shortstat --staged))$color"
 	fi
 	if [[ $git_status =~ 'Changes not staged' ]]; then
 	    color=${BPP_COLOR[WARNING]}
