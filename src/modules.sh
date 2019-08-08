@@ -88,15 +88,15 @@ function bpp_error {
     (( BPP_DATA[EXIT_STATUS] )) || return
 
     local ERR=${BPP_DATA[EXIT_STATUS]}
-    local EXIT
+    local EXIT MESSAGE
 
     if [[ "${BPP_DATA[EXIT_STATUS]}" -gt 255 ]]; then
-	EXIT="${BPP_COLOR[CRITICAL]}❌ [err: Invalid Exit Status ${ERR}] ❌${WHITE}"
+	MESSAGE="Invalid Exit Status"
     else
-	local MESSAGE
-	(( BPP_OPTIONS[VERBOSE_ERROR] )) && MESSAGE=" - ${BPP_ERRORS[$ERR]}"
-	EXIT="${BPP_COLOR[CRITICAL]}❌ [err: ${BPP_DATA[EXIT_STATUS]}] ${MESSAGE} ❌${WHITE}"
+	MESSAGE=${BPP_DATA[EXIT_STATUS]}
+	(( BPP_OPTIONS[VERBOSE_ERROR] )) && MESSAGE+=" - ${BPP_ERRORS[$ERR]}"
     fi
+    EXIT="${BPP_COLOR[CRITICAL]}error: ${MESSAGE}"
 
     echo $EXIT
 }
