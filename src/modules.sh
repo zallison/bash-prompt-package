@@ -294,10 +294,6 @@ function bpp-untext {
 
 function bpp_text {
     KEY=${1:-text}
-    if [ -z $2 ]; then
-	KEY=text
-    fi
-    if [ "${BPP_TEXT[$KEY]}" ]; then
+    [ ${BPP_TEXT[$KEY]+abc} ] && \
 	echo "${BPP_COLOR[INFO]}${BPP_TEXT[$KEY]}"
-    fi
 }
