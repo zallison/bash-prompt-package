@@ -65,14 +65,20 @@ function bpp_exec_module {
     ARGS=$*
     declare RET=""
     case $CMD in
-	CMD) RET=$(${BPP_DATA[DECORATOR]} $($ARGS $INDEX));;
-	CMDNL) RET=$(${BPP_DATA[DECORATOR]} $($ARGS $INDEX));
+	## Execute CMD and decorate
+	CMD) RET=$(${BPP_DATA[DECORATOR]} $($ARGS));;
+	## Execute CMD and decorate, add a newline if there's any output
+	CMDNL) RET=$(${BPP_DATA[DECORATOR]} $($ARGS));
 	       [ -n "$RET" ] && RET+=${BPP_GLYPHS[NEWLINE]};;
+	## Execute CMD and do not decorator
 	CMDRAW) RET=$($ARGS $INDEX);;
+	## Take a string and decorate it
 	STRDEC) if [ "$ARGS" ]; then RET=$(${BPP_DATA[DECORATOR]} ${BPP_COLOR[INFO]}$ARGS;);fi;;
+	## A pre-formatted string.
 	STR) RET="$ARGS";;
+	## Execute a command but don't append any output to PS1
 	EXE) $ARGS;;
-	FILE) RET=$(${BPP_DATA[DECORATOR]} "$(head -1 $2)");;
+	## NOOP
 	NOOP) return;;
 	*) echo "Unknown: $CMD"
     esac
