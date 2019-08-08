@@ -43,9 +43,9 @@ function bpp_git_shortstat() {
     BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
     [[ "$BRANCH" ]] || return 0
 
-    local STATS MODIFIED INSERTED DELETED
-
-    STATS=$(git diff --shortstat 2> /dev/null)
+    local STATS MODIFIED INSERTED DELETED TARGET
+    TARGET=${1:-}
+    STATS=$(git diff --shortstat $TARGET 2> /dev/null)
 
     local CHANGE_REGEX="([0-9]+) files? changed"
     if [[ $STATS =~ ${CHANGE_REGEX} ]]; then
@@ -91,6 +91,8 @@ function bpp_git() {
     echo $GIT
 }
 
+BPP_OPTIONS[GIT_STAT_AHEAD]=0
+BPP_OPTIONS[GIT_STAT_STAGE]=0
 function bpp_git_status() {
     command -v git 2>&1 > /dev/null || return
     local branch flags color
@@ -113,10 +115,14 @@ function bpp_git_status() {
 	if [[ $git_status =~ 'Your branch is ahead' ]]; then
 	    color=${BPP_COLOR[WARNING]}
 	    flags+=">"
+	    (( BPP_OPTIONS[GIT_STAT_AHEAD] )) && \
+		flags+="${BPP_COLOR[RESET]}($(bpp_git_shortstat HEAD~))$color"
 	fi
 	if [[ $git_status =~ 'Changes to be committed' ]]; then
 	    color=${BPP_COLOR[WARNING]}
 	    flags+="S"
+	    (( BPP_OPTIONS[GIT_STAT_STAGE] )) && \
+		flags+="${BPP_COLOR[RESET]}($(bpp_git_shortstat --staged))$color"
 	fi
 	if [[ $git_status =~ 'Changes not staged' ]]; then
 	    color=${BPP_COLOR[WARNING]}
