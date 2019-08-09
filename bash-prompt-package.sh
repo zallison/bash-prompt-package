@@ -14,17 +14,34 @@ declare -A BPP_BGCOLOR
 declare -A BPP_TEXT
 
 # UTF Glyphs
-BPP_GLYPHS[BOTTOM]="╚"
-BPP_GLYPHS[CLOSE]="❱"
-BPP_GLYPHS[DOWNARROW]="↓"
-BPP_GLYPHS[FILE]="🖺"
-BPP_GLYPHS[FOLDER]="📁"
-BPP_GLYPHS[MIDDLE]="║"
-BPP_GLYPHS[NBS]=" "
-BPP_GLYPHS[NEWLINE]=$'\n'
-BPP_GLYPHS[OPEN]="❰"
-BPP_GLYPHS[TOP]="╔"
-BPP_GLYPHS[ZAP]="⚡"
+
+if [ "${BPP_OPTIONS[GLYPH]}" = "utf" ]; then
+    BPP_GLYPHS[BOTTOM]="╚"
+    BPP_GLYPHS[CLOSE]="❱"
+    BPP_GLYPHS[DOWNARROW]="↓"
+    BPP_GLYPHS[FILE]="🖺"
+    BPP_GLYPHS[FOLDER]="📁"
+    BPP_GLYPHS[MAIL]="📧"
+    BPP_GLYPHS[MIDDLE]="║"
+    BPP_GLYPHS[NBS]=" "
+    BPP_GLYPHS[NEWLINE]=$'\n'
+    BPP_GLYPHS[OPEN]="❰"
+    BPP_GLYPHS[TOP]="╔"
+    BPP_GLYPHS[ZAP]="⚡"
+else
+    BPP_GLYPHS[BOTTOM]=""
+    BPP_GLYPHS[CLOSE]=")"
+    BPP_GLYPHS[DOWNARROW]="D"
+    BPP_GLYPHS[FILE]="F"
+    BPP_GLYPHS[FOLDER]=""
+    BPP_GLYPHS[MAIL]="M"
+    BPP_GLYPHS[MIDDLE]=""
+    BPP_GLYPHS[NBS]=" "
+    BPP_GLYPHS[NEWLINE]=$'\n'
+    BPP_GLYPHS[OPEN]="("
+    BPP_GLYPHS[TOP]=""
+    BPP_GLYPHS[ZAP]="C"
+fi
 # Colors
 function bpp_ps1_escape { echo "\[$*\]"; }
 function bpp_mk_prompt_color { bpp_ps1_escape "$(bpp_mk_color $1)"; }
@@ -117,6 +134,7 @@ BPP_ENABLED[VENV]=1
 BPP_OPTIONS[ACPI_HIDE_ABOVE]=65
 BPP_OPTIONS[DATE_FORMAT]="%I:%M"
 BPP_OPTIONS[HOST_LOCAL]=1
+BPP_OPTIONS[GLYPH]=${BPP_OPTIONS[GLYPH]-utf}
 BPP_OPTIONS[NOTE_FILE]="${HOME}/.bppnotes"
 BPP_OPTIONS[NOTE_ON_ENTRY]=1
 BPP_OPTIONS[TEMP_CRIT]=65
@@ -777,6 +795,8 @@ function bpp_git() {
     echo $GIT
 }
 
+BPP_OPTIONS[GIT_STAT_AHEAD]=0
+BPP_OPTIONS[GIT_STAT_STAGE]=0
 function bpp_git_status() {
     command -v git 2>&1 > /dev/null || return
     local branch flags color
