@@ -40,7 +40,7 @@ else
     BPP_GLYPHS[NEWLINE]=$'\n'
     BPP_GLYPHS[OPEN]="("
     BPP_GLYPHS[TOP]=""
-    BPP_GLYPHS[ZAP]="C"
+    BPP_GLYPHS[ZAP]="Z"
 fi
 # Colors
 function bpp_ps1_escape { echo "\[$*\]"; }
