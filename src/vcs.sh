@@ -102,7 +102,7 @@ function bpp_git_status() {
 	# If nothing changes the color, we can spot unhandled cases.
 	color=${BPP_COLOR[INFO]}
 
-	if [[ $(git stash show >/dev/null 2>/dev/null) ]]; then
+	if [[ $(git stash show 2>/dev/null) ]]; then
 	    flags+="*"
 	fi
 	if [[ $git_status =~ 'working tree clean' ]]; then
