@@ -397,8 +397,9 @@ function bpp_send_emacs_path_info() {
     local ssh_hostname
     local VALIDTERM=0
 
-    if [[ $LC_EMACS ]]; then
-	INSIDE_EMACS=1
+    if [[ $LC_EMACS && -z "$INSIDE_EMACS" ]]; then
+	INSIDE_EMACS="vterm"
+	TERM=screen.xterm-256color
     fi
     if [[ $LC_BPP_HOSTNAME ]]; then
 	ssh_hostname=$LC_BPP_HOSTNAME
@@ -450,8 +451,8 @@ function bpp_acpi {
     CHARGE_ICON="${CHARGE_ICON}"
     BLOCK=$(bpp_get_block_height $BATTERY_LEVEL)
     case $BATTERY_LEVEL in
-	100* | [98765]*) BATTERY_DISP="${BPP_COLOR[GOOD]}";;
-	[432]*) BATTERY_DISP="${BPP_COLOR[WARNING]}";;
+	100* | [987654]*) BATTERY_DISP="${BPP_COLOR[GOOD]}";;
+	[32]*) BATTERY_DISP="${BPP_COLOR[WARNING]}";;
 	*) BATTERY_DISP="${BPP_COLOR[CRITICAL]}";;
     esac
     BATTERY_DISP+="${BLOCK} ${BATTERY_LEVEL}"
