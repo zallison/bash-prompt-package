@@ -144,8 +144,9 @@ function bpp_send_emacs_path_info() {
     local ssh_hostname
     local VALIDTERM=0
 
-    if [[ $LC_EMACS ]]; then
-	INSIDE_EMACS=1
+    if [[ $LC_EMACS && -z "$INSIDE_EMACS" ]]; then
+	INSIDE_EMACS="vterm"
+	TERM=screen.xterm-256color
     fi
     if [[ $LC_BPP_HOSTNAME ]]; then
 	ssh_hostname=$LC_BPP_HOSTNAME
@@ -155,7 +156,13 @@ function bpp_send_emacs_path_info() {
     if [[ $TERM =~ "screen" || $TERM =~ "tmux" ]]; then
 	VALIDTERM=1
     fi
-    if [[ $VALIDTERM && $INSIDE_EMACS ]]; then
+
+    if [[ "$SSH_CONNECTION" ]]; then
+	TERM="xterm-256color"
+	printf "\033]51;A$(whoami)@${ssh_hostname}:$(pwd)\e\\"
+    elif [[ "$INSIDE_EMACS" == "vterm" ]]; then
+	printf "\033]51;A$(pwd)\e\\"
+    elif [[ $VALIDTERM && $INSIDE_EMACS ]]; then
 	echo -en "\033P\033AnSiTu" $(whoami)"\n\033\\"
 	echo -en "\033P\033AnSiTc" $(pwd)"\n\033\\"
 	echo -en "\033P\033AnSiTh" ${ssh_hostname}"\n\033\\"
