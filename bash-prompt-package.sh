@@ -626,7 +626,6 @@ function bpp_super_git {
 	fi
     done <<< $(git status --porcelain | grep ^??)
 }
-
 function bpp_venv {
     local envpath
     env_path=''
@@ -671,6 +670,7 @@ function bpp-venv {
 	if [[ $ENVPATH ]]; then
 	    source $ENVPATH;
 	    export VIRTUAL_ENV=$(readlink -f .)
+	    echo "Loaded virtual environment: $ENVPATH"
 	else
 	    echo "No virtual environment found"
 	fi
@@ -680,15 +680,16 @@ function bpp-venv {
 	if [[ $VIRTUAL_ENV ]]; then
 	    unset VIRTUAL_ENV
 	    deactivate
+	    echo "Unloaded virtual environment: $ENVPATH"
 	else
 	    echo "No virtual environment loaded"
 	fi
-
     }
 
     function goto_env {
 	if [[ $VIRTUAL_ENV ]]; then
 	    cd $VIRTUAL_ENV || exit
+	    echo "Returned to virtual environment"
 	else
 	    echo "No virtual environment loaded"
 	fi
@@ -697,11 +698,13 @@ function bpp-venv {
     case $1 in
 	'') if [[ $VIRTUAL_ENV ]]; then unload_env; else load_env;fi;;
 	'activate') load_env;;
-	'disable') unload_env;;
 	'deactivate') unload_env;;
-	'return') goto_env;;
+	'disable') unload_env;;
 	'go') goto_env;;
-	*) _bpp-venv; echo "Unknown action $1, try: ${COMPREPLY[*]}";;
+	'load') load_env;;
+	'return') goto_env;;
+	'unload') unload_env;;
+	*) _bpp-venv; echo "Unknown action $1, try:${BOLD} ${COMPREPLY[*]} ${RESET}";;
     esac
 }
 function _bpp-venv {
