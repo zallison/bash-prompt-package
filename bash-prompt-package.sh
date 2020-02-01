@@ -698,6 +698,7 @@ function bpp-venv {
     case $1 in
 	'') if [[ $VIRTUAL_ENV ]]; then unload_env; else load_env;fi;;
 	'activate') load_env;;
+	'cd') goto_env;;
 	'deactivate') unload_env;;
 	'disable') unload_env;;
 	'go') goto_env;;
@@ -708,7 +709,7 @@ function bpp-venv {
     esac
 }
 function _bpp-venv {
-    COMPREPLY=( $(compgen -W 'activate deactivate return go disable' -- $2))
+    COMPREPLY=( $(compgen -W 'activate cd deactivate disable go load return unload' -- $2))
     return 0
 }
 complete -F _bpp-venv bpp-venv
