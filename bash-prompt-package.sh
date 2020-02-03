@@ -644,7 +644,7 @@ function bpp_venv {
 	    here=$(basename $current)
 	    there=$(basename $VIRTUAL_ENV)
 	    if [[ ${current} == ${VIRTUAL_ENV} ]]; then
-		VENV="${BLUE}venv: ${here}"
+		VENV="${BPP_COLOR[DECORATION]}venv: ${here}"
 	    elif [[ ! -z "$env_path" ]]; then
 		VENV="${BPP_COLOR[CRITICAL]}venv: ${BPP_COLOR[WARNING]}${there} ${BPP_COLOR[CRITICAL]}vs${BPP_COLOR[WARNING]} $here"
 	    else
@@ -745,9 +745,9 @@ function bpp_svn {
         REFS=" $(svn info | grep "Repository Root" | sed 's/.*\///')"
         MODS=$(svn status | sed 's/ .*//' | grep -cE ^"(M|A|D)")
         if [[ ${MODS} != "0" ]] ; then
-            SVN="${BLUE}svn:$REFS ${BPP_COLOR[CRITICAL]}m:${MODS}" # Modified
+            SVN="${BPP_COLOR[DECORATION]}svn:$REFS ${BPP_COLOR[CRITICAL]}m:${MODS}" # Modified
         else
-            SVN="${BLUE}svn:$REFS"
+            SVN="${BPP_COLOR[DECORATION]}svn:$REFS"
         fi
     fi
     echo $SVN

@@ -16,7 +16,7 @@ function bpp_venv {
 	    here=$(basename $current)
 	    there=$(basename $VIRTUAL_ENV)
 	    if [[ ${current} == ${VIRTUAL_ENV} ]]; then
-		VENV="${BLUE}venv: ${here}"
+		VENV="${BPP_COLOR[DECORATION]}venv: ${here}"
 	    elif [[ ! -z "$env_path" ]]; then
 		VENV="${BPP_COLOR[CRITICAL]}venv: ${BPP_COLOR[WARNING]}${there} ${BPP_COLOR[CRITICAL]}vs${BPP_COLOR[WARNING]} $here"
 	    else

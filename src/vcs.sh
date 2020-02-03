@@ -30,9 +30,9 @@ function bpp_svn {
         REFS=" $(svn info | grep "Repository Root" | sed 's/.*\///')"
         MODS=$(svn status | sed 's/ .*//' | grep -cE ^"(M|A|D)")
         if [[ ${MODS} != "0" ]] ; then
-            SVN="${BLUE}svn:$REFS ${BPP_COLOR[CRITICAL]}m:${MODS}" # Modified
+            SVN="${BPP_COLOR[DECORATION]}svn:$REFS ${BPP_COLOR[CRITICAL]}m:${MODS}" # Modified
         else
-            SVN="${BLUE}svn:$REFS"
+            SVN="${BPP_COLOR[DECORATION]}svn:$REFS"
         fi
     fi
     echo $SVN
