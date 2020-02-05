@@ -391,39 +391,65 @@ function bpp_set_title() {
 
 }
 
-function bpp_send_emacs_path_info() {
+function bpp_emacs_ansiterm_path_info() {
     (( BPP_ENABLED[EMACS] )) || return
 
     local ssh_hostname
-    local VALIDTERM=0
 
-    if [[ $LC_EMACS && -z "$INSIDE_EMACS" ]]; then
-	INSIDE_EMACS="vterm"
-	TERM=screen.xterm-256color
-    fi
+    TERM_USER="\033AnSiTu"
+    TERM_PATH="\033AnSiTc"
+    TERM_HOST="\033AnSiTh"
+    SCREEN_START="\033P"
+    SCREEN_STOP="\n\033\\"
+
     if [[ $LC_BPP_HOSTNAME ]]; then
 	ssh_hostname=$LC_BPP_HOSTNAME
     else
 	ssh_hostname=$(hostname -s)
     fi
-    if [[ $TERM =~ "screen" || $TERM =~ "tmux" ]]; then
-	VALIDTERM=1
-    fi
 
-    if [[ "$SSH_CONNECTION" ]]; then
-	TERM="xterm-256color"
-	printf "\033]51;A$(whoami)@${ssh_hostname}:$(pwd)\e\\"
-    elif [[ "$INSIDE_EMACS" == "vterm" ]]; then
-	printf "\033]51;A$(pwd)\e\\"
-    elif [[ $VALIDTERM && $INSIDE_EMACS ]]; then
+    if [[ $TERM =~ "screen" ]]; then
 	echo -en "\033P\033AnSiTu" $(whoami)"\n\033\\"
 	echo -en "\033P\033AnSiTc" $(pwd)"\n\033\\"
 	echo -en "\033P\033AnSiTh" ${ssh_hostname}"\n\033\\"
-    elif [[ $TERM =~ "eterm" ]]; then
-	echo -e "\033AnSiTu" $(whoami)
-	echo -e "\033AnSiTc" $(pwd)
-	echo -e "\033AnSiTh" ${ssh_hostname}
+    else
+	echo -e "${TERM_USER}" "${LOGNAME}" # $LOGNAME is more portable than using whoami.
+	echo -e "${TERM_PATH}" "$(pwd)"
+	echo -e "${TERM_HOST}" "${ssh_hostname}"
     fi
+}
+
+
+function bpp_emacs_vterm_path_info() {
+    (( BPP_ENABLED[EMACS] )) || return
+
+    local ssh_hostname
+
+    VTERM_DIRTRACK="51;A"
+    function _vterm_printf {
+	if [[ "$TMUX" ]]; then
+	    # tell tmux to pass the escape sequences through
+	    # (Source: http://permalink.gmane.org/gmane.comp.terminal-emulators.tmux.user/1324)
+	    printf "\ePtmux;\e\e]%s\007\e\\" "$1"
+	elif [[ "${TERM}" =~ "screen" ]]; then
+	    # GNU screen (screen, screen-256color, screen-256color-bce)
+	    printf "\eP\e]%s\007\e\\" "$1"
+	else
+	    printf "\e]%s\e\\" "$1"
+	fi
+    }
+
+    function vterm_prompt(){
+	_vterm_printf "${VTERM_DIRTRACK}${1}"
+    }
+
+    if [[ $LC_BPP_HOSTNAME ]]; then
+	ssh_hostname=$LC_BPP_HOSTNAME
+    else
+	ssh_hostname=$(hostname -s)
+    fi
+
+    vterm_prompt "$(whoami)@${ssh_hostname}:$(pwd)"
 }
 
 function bpp_acpi {

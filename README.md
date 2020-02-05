@@ -140,7 +140,7 @@ There are some commands that don't add anything to the prompt but are still usef
 
 `bpp_set_title` (e.g. `"EXE bpp_set_title"`) will print the escape sequence to set the title of an xterm.
 
-`bpp_send_emacs_path_info` - will print the escape sequence to tell emacs ansti-term the path info.
+`bpp_emacs_vterm_path_info` - will print the escape sequence to tell emacs libvterm the path info.
 
 `bpp_history` - Write your history and reload it to sync history from all terms
 
@@ -172,8 +172,6 @@ There are some commands that don't add anything to the prompt but are still usef
 
 `bpp_note` - Show a note for a given directory.  Set notes with `bpp-note "message" <dir>`.  If no dir is given pwd is used.  The option BPP_OPTIONS[NOTE_ON_ENTRY] gives you the option to only show when you enter the diretory, instead of whenever you're in the dir.
 
-`bpp_send_emacs_path_info` - Send the current path info to emacs in ansi-term, allowing TRAMP to easily make connections
-
 `bpp_set_title` - Send the escape sequence to set the title for xterm, screen, tmux etc.
 
 `bpp_text <id>` - Show the text value id, set with `bpp-text "some message" myid` unset with `bpp-untext myid`, or by set the variable diretly at BPP_NOTES[id]. **ESCAPED VARIABLES WILL BE EVALUATED**
@@ -181,6 +179,10 @@ There are some commands that don't add anything to the prompt but are still usef
  - `bpp-text "host: \$DOCKER_HOST" top` will eval DOCKER_HOST on display  It is colored with BPP_COLOR[INFO].
  - `bpp-text "\$(fortune -s | tr -d \$'\n')" top` - Display a fortune
  - `bpp-text '$BPP_BOTTOM' bottom ; export BPP_BOTTOM="Goodbye, world!"` - Set a variable, upate the prompt.
+
+`bpp_emacs_ansiterm_path_info` - Send the current path info to emacs in ansi-term, allowing TRAMP to easily make connections
+
+`bpp_emacs_vterm_path_info` - Send the current path info to emacs in libvterm, allowing TRAMP to easily make connections
 
 `bpp_uptime` - Show and colorize uptime values
 
