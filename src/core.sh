@@ -16,7 +16,13 @@ export PROMPT_COMMAND=bpp_prompt_command
 
 function bpp-disable { BPP_ENABLED[$1]=0; }
 function bpp-enable  { BPP_ENABLED[$1]=1; }
-function bpp-options { BPP_OPTIONS[$1]=$2; }
+function bpp-options {
+    if [[ $2 ]]; then
+	BPP_OPTIONS[$1]=$2;
+    else
+	echo $1 = ${BPP_OPTIONS[$1]}
+    fi
+}
 
 function _bpp_options {
     KEYS=$(for i in "${!BPP_OPTIONS[@]}"; do
