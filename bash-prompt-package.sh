@@ -586,8 +586,18 @@ function bpp-untext {
 
 function bpp_text {
     KEY=${1:-text}
-    [ ${BPP_TEXT[$KEY]+abc} ] && \
-	echo "${BPP_COLOR[INFO]}${BPP_TEXT[$KEY]}"
+
+    TEXT=${BPP_TEXT[$KEY]}
+
+    # Eval any expressions
+    if [[ ${TEXT:0:1} == '$' ]]; then
+	RES=$(eval echo -n $TEXT)
+    else
+	RES=$TEXT
+    fi
+
+    [[ "${RES}" ]] && \
+	echo -n "${BPP_COLOR[INFO]}${RES}"
 }
 ### Prompt Examples
 
