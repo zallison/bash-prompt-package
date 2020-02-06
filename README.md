@@ -174,9 +174,10 @@ There are some commands that don't add anything to the prompt but are still usef
 
 `bpp_set_title` - Send the escape sequence to set the title for xterm, screen, tmux etc.
 
-`bpp_text <id>` - Show the text value id, set with `bpp-text "some message" myid` unset with `bpp-untext myid`, or by set the variable diretly at BPP_NOTES[id]. **ESCAPED VARIABLES WILL BE EVALUATED**
+`bpp_text <id>` - Show the text value id, set with `bpp-text "some message" myid` unset with `bpp-untext myid`, or by set the variable diretly at BPP_NOTES[id]. **ESCAPED VARIABLES WILL BE EVALUATED**.  The
 
  - `bpp-text "host: \$DOCKER_HOST" top` will eval DOCKER_HOST on display  It is colored with BPP_COLOR[INFO].
+ - `bpp-text '$(if [[ $DOCKER_HOST != "default.host" ]]; then echo -n $DOCKER_HOST;fi)' top[[ $DOCKER_HOST != "default.server.com" ]]; then echo -n $DOCKER_HOST;fi)' top` only shows $DOCKER_HOST if it's not the default server
  - `bpp-text "\$(fortune -s | tr -d \$'\n')" top` - Display a fortune
  - `bpp-text '$BPP_BOTTOM' bottom ; export BPP_BOTTOM="Goodbye, world!"` - Set a variable, upate the prompt.
 
