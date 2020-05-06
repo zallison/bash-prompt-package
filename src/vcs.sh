@@ -84,7 +84,7 @@ function bpp_git() {
         if [[ ! $REMOTE ]]; then
             REMOTE=local
         fi
-        GIT="${BPP_COLOR[RESET]}$REMOTE: $STATUS";
+        GIT="${BPP_COLOR[RESET]}${BPP_COLOR[INFO]}$REMOTE: $STATUS";
     else
         GIT="${BPP_COLOR[RESET]}$STATUS";
     fi
