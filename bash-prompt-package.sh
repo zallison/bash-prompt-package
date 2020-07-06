@@ -51,6 +51,7 @@ function bpp_mk_bgcolor { echo "\033[48;5;${1}m"; }
 
 # Reset
 BPP_COLOR[RESET]=$(bpp_ps1_escape "\033[m")
+BPP_COLOR[RESETTERM]="\033[m"
 
 # Options (depends on terminal support)
 BPP_COLOR[BOLD]="\[\033[1m\]"
