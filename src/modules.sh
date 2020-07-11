@@ -13,27 +13,37 @@ function bpp_uptime {
     if [[ ${BPP_ENABLED[UPTIME]} == 1 ]]; then
         BPP_OPTIONS[UPTIME_SEPERATOR]=${BPP_OPTIONS[UPTIME_SEPERATOR]:=}
         BPP_OPTIONS[UPTIME_BLOCK]=${BPP_OPTIONS[UPTIME_BLOCK]:=1}
-        function colorize {
-            uptime=$1
+        function colorize_load {
+            load=$1
             cores=$(nproc --all)
             color=""
+            # Relative load = Constant (125) * (load / #cores)
+
+            # This accounts for how "bad" the load is.  A load of 8 on a dual
+            # core system is a lot worse than a load of 8 on a 64 core system.
+
+            # A relative load of < 40 is good
+            # < 70 is a warning
+            # >= 70 is critical
+
             relative_load=$(echo "5k 125 ${uptime} ${cores} / *p" | dc)
             case $relative_load in
                 [456]?.*) color=${BPP_COLOR[WARNING]};;
                 0* | .* | [0-9].* | [0123]?.*) color=${BPP_COLOR[GOOD]};;
                 *) color=${BPP_COLOR[CRITICAL]};;
             esac
+
             if [ ${BPP_OPTIONS[UPTIME_BLOCK]} == 1 ]; then
-                echo ${color}$uptime$(bpp_get_block_height $relative_load)
+                echo ${color}$load$(bpp_get_block_height $relative_load)
             else
-                echo ${color}$uptime
+                echo ${color}$load
             fi
         }
 
         LOAD=$(uptime| sed 's/.*: //' | sed 's/, / /g')
 
         for val in $LOAD; do
-            UPTIME+="$(colorize ${val})${BPP_OPTIONS[UPTIME_SEPERATOR]}"
+            UPTIME+="$(colorize_load ${val})${BPP_OPTIONS[UPTIME_SEPERATOR]}"
         done
     fi
 
