@@ -32,8 +32,9 @@ BPP_OPTIONS[VENV_PATHS]="venv env virtual-env .venv .environment environment"
 BPP_OPTIONS[VERBOSE_ERROR]=1
 
 BPP_DATA[OLDPWD]=""
-BPP_DATA[DECORATOR]="bpp_decorate" # Command to "decorate" text.  By
-				   # default wraps it in ❰ and ❱
+# Command to "decorate" text.  By default `bpp_decorate` wraps it in ❰ and ❱
+# This is run on each "CMD" entry.
+BPP_DATA[DECORATOR]="bpp_decorate" 
 
 # Bash Options
 export PROMPT_DIRTRIM=3

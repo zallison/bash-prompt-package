@@ -59,15 +59,18 @@ function bpp_user_and_host {
     else
         HOSTCOLOR=${BPP_COLOR[WARNING]}
     fi
+
     if [ -z "$USER" ]; then
         USER=${BPP_OPTIONS[USER]}
     fi
+
     if [ "$(whoami)" != "root" ]; then
         USERCOLOR=${BPP_COLOR[GOOD]}
     else
         USERCOLOR=${BPP_COLOR[CRITICAL]}
         HOSTCOLOR=${BPP_COLOR[CRITICAL]}
     fi
+
     if [[ -n "$SSH" || "${BPP_OPTIONS[HOST_LOCAL]}" != "0" ]]; then
         USERatHOST="${USERCOLOR}${USER}${BPP_COLOR[DECORATION]}@${HOSTCOLOR}\h"
     else
@@ -77,6 +80,7 @@ function bpp_user_and_host {
     echo $USERatHOST
 }
 
+# bpp_error - show the exit code of the last process
 declare -a BPP_ERRORS
 BPP_ERRORS[1]="General error"
 BPP_ERRORS[2]="Missing keyword, command, or permission problem"

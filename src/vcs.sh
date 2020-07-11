@@ -98,53 +98,53 @@ function bpp_git_status() {
     local branch flags color
     branch=$(git rev-parse --abbrev-ref HEAD  2>/dev/null)
     if [[ -n "$branch" ]]; then
-	git_status=$(git status 2> /dev/null)
-	# If nothing changes the color, we can spot unhandled cases.
-	color=${BPP_COLOR[INFO]}
+        git_status=$(git status 2> /dev/null)
+        # If nothing changes the color, we can spot unhandled cases.
+        color=${BPP_COLOR[INFO]}
 
-	if [[ $(git stash show 2>/dev/null) ]]; then
-	    flags+="*"
-	fi
-	if [[ $git_status =~ 'working tree clean' ]]; then
-	    color=${BPP_COLOR[GOOD]}
-	fi
-	if [[ $git_status =~ 'Untracked files' ]]; then
-	    color=${BPP_COLOR[WARNING]}
-	    flags+="U"
-	fi
-	if [[ $git_status =~ 'Your branch is ahead' ]]; then
-	    color=${BPP_COLOR[WARNING]}
-	    flags+=">"
-	    (( BPP_OPTIONS[GIT_STAT_AHEAD] )) && \
-		flags+="${BPP_COLOR[RESET]}($(bpp_git_shortstat HEAD~))$color"
-	fi
-	if [[ $git_status =~ 'Changes to be committed' ]]; then
-	    color=${BPP_COLOR[WARNING]}
-	    flags+="S"
-	    (( BPP_OPTIONS[GIT_STAT_STAGE] )) && \
-		flags+="${BPP_COLOR[RESET]}($(bpp_git_shortstat --staged))$color"
-	fi
-	if [[ $git_status =~ 'Changes not staged' ]]; then
-	    color=${BPP_COLOR[WARNING]}
-	fi
-	if [[ $git_status =~ 'Changed but not updated' ||
-		  $git_status =~ 'Unmerged paths' ]]; then
-	    color=${BPP_COLOR[WARNING]}
-	    flags+="!"
-	fi
-	if [[ $git_status =~ 'Your branch'.+diverged ]]; then
-	    color=${BPP_COLOR[CRITICAL]}
-	    flags+="{"
-	fi
-	if [[ $git_status =~ 'Your branch is behind' ]]; then
-	    color=${BPP_COLOR[CRITICAL]}
-	    flags+="<"
-	fi
+        if [[ $(git stash show 2>/dev/null) ]]; then
+            flags+="*"
+        fi
+        if [[ $git_status =~ 'working tree clean' ]]; then
+            color=${BPP_COLOR[GOOD]}
+        fi
+        if [[ $git_status =~ 'Untracked files' ]]; then
+            color=${BPP_COLOR[WARNING]}
+            flags+="U"
+        fi
+        if [[ $git_status =~ 'Your branch is ahead' ]]; then
+            color=${BPP_COLOR[WARNING]}
+            flags+=">"
+            (( BPP_OPTIONS[GIT_STAT_AHEAD] )) && \
+                flags+="${BPP_COLOR[RESET]}($(bpp_git_shortstat HEAD~))$color"
+        fi
+        if [[ $git_status =~ 'Changes to be committed' ]]; then
+            color=${BPP_COLOR[WARNING]}
+            flags+="S"
+            (( BPP_OPTIONS[GIT_STAT_STAGE] )) && \
+                flags+="${BPP_COLOR[RESET]}($(bpp_git_shortstat --staged))$color"
+        fi
+        if [[ $git_status =~ 'Changes not staged' ]]; then
+            color=${BPP_COLOR[WARNING]}
+        fi
+        if [[ $git_status =~ 'Changed but not updated' ||
+                  $git_status =~ 'Unmerged paths' ]]; then
+            color=${BPP_COLOR[WARNING]}
+            flags+="!"
+        fi
+        if [[ $git_status =~ 'Your branch'.+diverged ]]; then
+            color=${BPP_COLOR[CRITICAL]}
+            flags+="{"
+        fi
+        if [[ $git_status =~ 'Your branch is behind' ]]; then
+            color=${BPP_COLOR[CRITICAL]}
+            flags+="<"
+        fi
 
-	if [[ -n "${flags}" ]]; then
-	    flags=":${flags}"
-	fi
-	echo -n "${color}${branch}${flags}${BPP_COLOR[RESET]}"
+        if [[ -n "${flags}" ]]; then
+            flags=":${flags}"
+        fi
+        echo -n "${color}${branch}${flags}${BPP_COLOR[RESET]}"
     fi
     return 0
 }

@@ -22,8 +22,9 @@ function bpp-options {
     if [[ $2 ]]; then
         BPP_OPTIONS[$1]=$2;
         case $1 in
-            GLYPHS) _bpp_change_glyphs;;
-        esac    else
+            GLYPH*) _bpp_change_glyphs;;
+        esac
+    else
         echo $1 = ${BPP_OPTIONS[$1]}
     fi
 }
@@ -74,6 +75,7 @@ function bpp_exec_module {
     shift;shift
     ARGS=$*
     declare RET=""
+    [[ $CMD ]] || return
     case $CMD in
         ## Execute CMD and decorate
         CMD) RET=$(${BPP_DATA[DECORATOR]} $($ARGS));;
@@ -90,7 +92,8 @@ function bpp_exec_module {
         EXE) $ARGS;;
         ## NOOP
         NOOP) return;;
-        *) echo "Unknown: $CMD"
+        ## Unknown
+        *) echo "Unknown: $INDEX $CMD";;
     esac
     PS1+=${RET}${BPP_COLOR[RESET]}
 }

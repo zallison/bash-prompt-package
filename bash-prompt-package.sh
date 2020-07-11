@@ -3,7 +3,6 @@
 #######################
 # Bash Prompt Package #
 #######################
-
 # Variables
 declare -A BPP_OPTIONS
 declare -A BPP_ENABLED
@@ -15,33 +14,36 @@ declare -A BPP_TEXT
 
 # UTF Glyphs
 
-if [ "${BPP_OPTIONS[GLYPH]}" = "utf" ]; then
-    BPP_GLYPHS[BOTTOM]="╚"
-    BPP_GLYPHS[CLOSE]="❱"
-    BPP_GLYPHS[DOWNARROW]="↓"
-    BPP_GLYPHS[FILE]="🖺"
-    BPP_GLYPHS[FOLDER]="📁"
-    BPP_GLYPHS[MAIL]="📧"
-    BPP_GLYPHS[MIDDLE]="║"
-    BPP_GLYPHS[NBS]=" "
-    BPP_GLYPHS[NEWLINE]=$'\n'
-    BPP_GLYPHS[OPEN]="❰"
-    BPP_GLYPHS[TOP]="╔"
-    BPP_GLYPHS[ZAP]="⚡"
-else
-    BPP_GLYPHS[BOTTOM]=""
-    BPP_GLYPHS[CLOSE]=")"
-    BPP_GLYPHS[DOWNARROW]="D"
-    BPP_GLYPHS[FILE]="F"
-    BPP_GLYPHS[FOLDER]=""
-    BPP_GLYPHS[MAIL]="M"
-    BPP_GLYPHS[MIDDLE]=""
-    BPP_GLYPHS[NBS]=" "
-    BPP_GLYPHS[NEWLINE]=$'\n'
-    BPP_GLYPHS[OPEN]="("
-    BPP_GLYPHS[TOP]=""
-    BPP_GLYPHS[ZAP]="Z"
-fi
+function _bpp_change_glyphs {
+    if [ "${BPP_OPTIONS[GLYPH]}" = "utf" ]; then
+        BPP_GLYPHS[BOTTOM]="╚"
+        BPP_GLYPHS[CLOSE]="❱"
+        BPP_GLYPHS[DOWNARROW]="↓"
+        BPP_GLYPHS[FILE]="🖺"
+        BPP_GLYPHS[FOLDER]="📁"
+        BPP_GLYPHS[MAIL]="📧"
+        BPP_GLYPHS[MIDDLE]="║"
+        BPP_GLYPHS[NBS]=" "
+        BPP_GLYPHS[NEWLINE]=$'\n'
+        BPP_GLYPHS[OPEN]="❰"
+        BPP_GLYPHS[TOP]="╔"
+        BPP_GLYPHS[ZAP]="⚡"
+    else
+        BPP_GLYPHS[BOTTOM]=""
+        BPP_GLYPHS[CLOSE]=")"
+        BPP_GLYPHS[DOWNARROW]="D"
+        BPP_GLYPHS[FILE]="F"
+        BPP_GLYPHS[FOLDER]=""
+        BPP_GLYPHS[MAIL]="M"
+        BPP_GLYPHS[MIDDLE]=""
+        BPP_GLYPHS[NBS]=" "
+        BPP_GLYPHS[NEWLINE]=$'\n'
+        BPP_GLYPHS[OPEN]="("
+        BPP_GLYPHS[TOP]=""
+        BPP_GLYPHS[ZAP]="Z"
+    fi
+}
+
 # Colors
 function bpp_ps1_escape { echo "\[$*\]"; }
 function bpp_mk_prompt_color { bpp_ps1_escape "$(bpp_mk_color $1)"; }
@@ -61,8 +63,6 @@ BPP_COLOR[BLINK]="\[\033[7m\]"
 BPP_COLOR[INVERT]="\[\033[8m\]"
 
 export BPP_COLOR BPP_BGCOLOR
-
-
 ## Named Colors for 0-15
 # Foreground
 BPP_COLOR[BLACK]=$(bpp_mk_prompt_color 0)
@@ -113,7 +113,6 @@ else
     BPP_COLOR[CRITICAL]=${BPP_COLOR[BRIGHTRED]}
     BPP_COLOR[INFO]=${BPP_COLOR[GREY]}
 fi
-
 # BPP Environment Options
 
 # These can be turned off at runtime to disable a running module
@@ -148,8 +147,9 @@ BPP_OPTIONS[VENV_PATHS]="venv env virtual-env .venv .environment environment"
 BPP_OPTIONS[VERBOSE_ERROR]=1
 
 BPP_DATA[OLDPWD]=""
-BPP_DATA[DECORATOR]="bpp_decorate" # Command to "decorate" text.  By
-				   # default wraps it in ❰ and ❱
+# Command to "decorate" text.  By default `bpp_decorate` wraps it in ❰ and ❱
+# This is run on each "CMD" entry.
+BPP_DATA[DECORATOR]="bpp_decorate" 
 
 # Bash Options
 export PROMPT_DIRTRIM=3
@@ -159,10 +159,13 @@ export PROMPT_DIRTRIM=3
 function bpp_prompt_command {
     BPP_DATA[EXIT_STATUS]=$?
     PS1="${BPP_COLOR[RESET]}"
-    for ((i=0; i<${#BPP[*]}; i++)); do
+    max=${#BPP[*]}
+    local i=0
+    while [ "$i" -le $max ]; do
         module=${BPP[$i]}
         local IFS=" "
         bpp_exec_module $i $module
+        i=$(( i + 1 ))
     done
     PS1="${PS1}${BPP_COLOR[RESET]} "
     BPP_DATA[OLDPWD]=$(pwd)
@@ -176,8 +179,9 @@ function bpp-options {
     if [[ $2 ]]; then
         BPP_OPTIONS[$1]=$2;
         case $1 in
-            GLYPHS) _bpp_change_glyphs;;
-        esac    else
+            GLYPH*) _bpp_change_glyphs;;
+        esac
+    else
         echo $1 = ${BPP_OPTIONS[$1]}
     fi
 }
@@ -228,6 +232,7 @@ function bpp_exec_module {
     shift;shift
     ARGS=$*
     declare RET=""
+    [[ $CMD ]] || return
     case $CMD in
         ## Execute CMD and decorate
         CMD) RET=$(${BPP_DATA[DECORATOR]} $($ARGS));;
@@ -244,7 +249,8 @@ function bpp_exec_module {
         EXE) $ARGS;;
         ## NOOP
         NOOP) return;;
-        *) echo "Unknown: $CMD"
+        ## Unknown
+        *) echo "Unknown: $INDEX $CMD";;
     esac
     PS1+=${RET}${BPP_COLOR[RESET]}
 }
@@ -262,40 +268,50 @@ function bpp_decorate {
 ### Standard Modules
 function bpp_date {
     if [[ ${BPP_ENABLED[DATE]} == 1 ]]; then
-	DATE="${BPP_COLOR[INFO]}$(date +${BPP_OPTIONS[DATE_FORMAT]})"
+        DATE="${BPP_COLOR[INFO]}$(date +${BPP_OPTIONS[DATE_FORMAT]})"
     else
-	DATE=""
+        DATE=""
     fi
     echo $DATE
 }
 
 function bpp_uptime {
+    local cores
+    cores=$(nproc --all)
     UPTIME=""
     if [[ ${BPP_ENABLED[UPTIME]} == 1 ]]; then
-	BPP_OPTIONS[UPTIME_SEPERATOR]=${BPP_OPTIONS[UPTIME_SEPERATOR]:=}
-	BPP_OPTIONS[UPTIME_BLOCK]=${BPP_OPTIONS[UPTIME_BLOCK]:=1}
-	function colorize {
-	    uptime=$1
-	    cores=$(nproc --all)
-	    color=""
-	    relative_load=$(echo "5k 125 ${uptime} ${cores} / *p" | dc)
-	    case $relative_load in
-		[456]?.*) color=${BPP_COLOR[WARNING]};;
-		0* | .* | [0-9].* | [0123]?.*) color=${BPP_COLOR[GOOD]};;
-		*) color=${BPP_COLOR[CRITICAL]};;
-	    esac
-	    if [ ${BPP_OPTIONS[UPTIME_BLOCK]} == 1 ]; then
-		echo ${color}$uptime$(bpp_get_block_height $relative_load)
-	    else
-		echo ${color}$uptime
-	    fi
-	}
+        function colorize_load {
+            local load color relative_load adjusted_load
+            load=$1
+            color=${BPP_COLOR[GOOD]}
+            # Relative load = (load - #cores) / #cores
 
-	LOAD=$(uptime| sed 's/.*: //' | sed 's/, / /g')
+            # This accounts for how "bad" the load is.  A load of 8 on a dual
+            # core system is a lot worse than a load of 8 on a 64 core system.
 
-	for val in $LOAD; do
-	    UPTIME+="$(colorize ${val})${BPP_OPTIONS[UPTIME_SEPERATOR]}"
-	done
+            relative_load=$( bc <<< "scale=4; ($load - $cores) / ${cores}" )
+
+            if [[ $(bc <<< "$relative_load > .5") = 1 ]]; then
+                color=${BPP_COLOR[WARNING]}
+            elif [[ $(bc <<< "$relative_load > 1.1") = 1 ]]; then
+                color=${BPP_COLOR[CRITICAL]}
+            fi
+
+            if [ ${BPP_OPTIONS[UPTIME_BLOCK]} == 1 ]; then
+                echo ${color}$load$(bpp_get_block_height $relative_load)
+            else
+                echo ${color}$load
+            fi
+        }
+
+        BPP_OPTIONS[UPTIME_SEPERATOR]=${BPP_OPTIONS[UPTIME_SEPERATOR]:=}
+        BPP_OPTIONS[UPTIME_BLOCK]=${BPP_OPTIONS[UPTIME_BLOCK]:=1}
+
+        LOAD=$(uptime| sed 's/.*: //' | sed 's/, / /g')
+
+        for val in $LOAD; do
+            UPTIME+="$(colorize_load ${val})${BPP_OPTIONS[UPTIME_SEPERATOR]}"
+        done
     fi
 
     echo $UPTIME
@@ -305,29 +321,33 @@ function bpp_user_and_host {
     (( BPP_ENABLED[USER] )) || return
 
     if [ -z "$SSH_CONNECTION" ]; then
-	# Local
-	HOSTCOLOR=${BPP_COLOR[GOOD]}
+        # Local
+        HOSTCOLOR=${BPP_COLOR[GOOD]}
     else
-	HOSTCOLOR=${BPP_COLOR[WARNING]}
+        HOSTCOLOR=${BPP_COLOR[WARNING]}
     fi
+
     if [ -z "$USER" ]; then
-	USER=${BPP_OPTIONS[USER]}
+        USER=${BPP_OPTIONS[USER]}
     fi
+
     if [ "$(whoami)" != "root" ]; then
-	USERCOLOR=${BPP_COLOR[GOOD]}
+        USERCOLOR=${BPP_COLOR[GOOD]}
     else
-	USERCOLOR=${BPP_COLOR[CRITICAL]}
-	HOSTCOLOR=${BPP_COLOR[CRITICAL]}
+        USERCOLOR=${BPP_COLOR[CRITICAL]}
+        HOSTCOLOR=${BPP_COLOR[CRITICAL]}
     fi
+
     if [[ -n "$SSH" || "${BPP_OPTIONS[HOST_LOCAL]}" != "0" ]]; then
-	USERatHOST="${USERCOLOR}${USER}${BPP_COLOR[DECORATION]}@${HOSTCOLOR}\h"
+        USERatHOST="${USERCOLOR}${USER}${BPP_COLOR[DECORATION]}@${HOSTCOLOR}\h"
     else
-	USERatHOST="${USERCOLOR}${USER}"
+        USERatHOST="${USERCOLOR}${USER}"
     fi
 
     echo $USERatHOST
 }
 
+# bpp_error - show the exit code of the last process
 declare -a BPP_ERRORS
 BPP_ERRORS[1]="General error"
 BPP_ERRORS[2]="Missing keyword, command, or permission problem"
@@ -352,10 +372,10 @@ function bpp_error {
     local EXIT MESSAGE
 
     if [[ "${BPP_DATA[EXIT_STATUS]}" -gt 255 ]]; then
-	MESSAGE="Invalid Exit Status"
+        MESSAGE="Invalid Exit Status"
     else
-	MESSAGE=${BPP_DATA[EXIT_STATUS]}
-	(( BPP_OPTIONS[VERBOSE_ERROR] )) && MESSAGE+=" - ${BPP_ERRORS[$ERR]}"
+        MESSAGE=${BPP_DATA[EXIT_STATUS]}
+        (( BPP_OPTIONS[VERBOSE_ERROR] )) && MESSAGE+=" - ${BPP_ERRORS[$ERR]:-Unknown or nonstandard error}"
     fi
     EXIT="${BPP_COLOR[CRITICAL]}error: ${MESSAGE}"
 
@@ -377,11 +397,11 @@ function bpp_set_title() {
     (( BPP_ENABLED[SET_TITLE] )) || return
 
     function set_title {
-	if [[ ! -z $TMUX && -z $SSH ]]; then
-	    tmux rename-window -t${TMUX_PANE} "$*"
-	elif [[ $TERM =~ screen ]]; then
-	    printf "\033k %s \033\\" "$*"
-	fi
+        if [[ ! -z $TMUX && -z $SSH ]]; then
+            tmux rename-window -t${TMUX_PANE} "$*"
+        elif [[ $TERM =~ screen ]]; then
+            printf "\033k %s \033\\" "$*"
+        fi
     }
 
     local LENGTH=15
@@ -390,11 +410,11 @@ function bpp_set_title() {
 
     # Set title for xterm / screen / tabs
     if [ -z "$SSH_CONNECTION" ]; then
-	# Local
-	set_title "${tmp}"
+        # Local
+        set_title "${tmp}"
     else
-	# ssh
-	set_title "${USER}@${HOSTNAME%%.*}:${tmp}"
+        # ssh
+        set_title "${USER}@${HOSTNAME%%.*}:${tmp}"
     fi
 
 }
@@ -411,19 +431,19 @@ function bpp_emacs_ansiterm_path_info() {
     SCREEN_STOP="\n\033\\"
 
     if [[ $LC_BPP_HOSTNAME ]]; then
-	ssh_hostname=$LC_BPP_HOSTNAME
+        ssh_hostname=$LC_BPP_HOSTNAME
     else
-	ssh_hostname=$(hostname -s)
+        ssh_hostname=$(hostname -s)
     fi
 
     if [[ $TERM =~ "screen" ]]; then
-	echo -en "\033P\033AnSiTu" $(whoami)"\n\033\\"
-	echo -en "\033P\033AnSiTc" $(pwd)"\n\033\\"
-	echo -en "\033P\033AnSiTh" ${ssh_hostname}"\n\033\\"
+        echo -en "\033P\033AnSiTu" $(whoami)"\n\033\\"
+        echo -en "\033P\033AnSiTc" $(pwd)"\n\033\\"
+        echo -en "\033P\033AnSiTh" ${ssh_hostname}"\n\033\\"
     else
-	echo -e "${TERM_USER}" "${LOGNAME}" # $LOGNAME is more portable than using whoami.
-	echo -e "${TERM_PATH}" "$(pwd)"
-	echo -e "${TERM_HOST}" "${ssh_hostname}"
+        echo -e "${TERM_USER}" "${LOGNAME}" # $LOGNAME is more portable than using whoami.
+        echo -e "${TERM_PATH}" "$(pwd)"
+        echo -e "${TERM_HOST}" "${ssh_hostname}"
     fi
 }
 
@@ -435,26 +455,26 @@ function bpp_emacs_vterm_path_info() {
 
     VTERM_DIRTRACK="51;A"
     function _vterm_printf {
-	if [[ "$TMUX" ]]; then
-	    # tell tmux to pass the escape sequences through
-	    # (Source: http://permalink.gmane.org/gmane.comp.terminal-emulators.tmux.user/1324)
-	    printf "\ePtmux;\e\e]%s\007\e\\" "$1"
-	elif [[ "${TERM}" =~ "screen" ]]; then
-	    # GNU screen (screen, screen-256color, screen-256color-bce)
-	    printf "\eP\e]%s\007\e\\" "$1"
-	else
-	    printf "\e]%s\e\\" "$1"
-	fi
+        if [[ "$TMUX" ]]; then
+            # tell tmux to pass the escape sequences through
+            # (Source: http://permalink.gmane.org/gmane.comp.terminal-emulators.tmux.user/1324)
+            printf "\ePtmux;\e\e]%s\007\e\\" "$1"
+        elif [[ "${TERM}" =~ "screen" ]]; then
+            # GNU screen (screen, screen-256color, screen-256color-bce)
+            printf "\eP\e]%s\007\e\\" "$1"
+        else
+            printf "\e]%s\e\\" "$1"
+        fi
     }
 
     function vterm_prompt(){
-	_vterm_printf "${VTERM_DIRTRACK}${1}"
+        _vterm_printf "${VTERM_DIRTRACK}${1}"
     }
 
     if [[ $LC_BPP_HOSTNAME ]]; then
-	ssh_hostname=$LC_BPP_HOSTNAME
+        ssh_hostname=$LC_BPP_HOSTNAME
     else
-	ssh_hostname=$(hostname -s)
+        ssh_hostname=$(hostname -s)
     fi
 
     vterm_prompt "$(whoami)@${ssh_hostname}:$(pwd)"
@@ -467,27 +487,27 @@ function bpp_acpi {
     BATTERY_LEVEL=${ACPI#* }
     CHARGE_STATUS=${ACPI/ *}
     if [[ ${BPP_OPTIONS[ACPI_HIDE_ABOVE]} &&
-	      "${BATTERY_LEVEL}" -gt "${BPP_OPTIONS[ACPI_HIDE_ABOVE]}" ]]; then
-	return
+              "${BATTERY_LEVEL}" -gt "${BPP_OPTIONS[ACPI_HIDE_ABOVE]}" ]]; then
+        return
     fi
     if [ -z $BATTERY_LEVEL ]; then
-	BPP_ENABLED[ACPI]=0
-	return
+        BPP_ENABLED[ACPI]=0
+        return
     fi
     CHARGE_ICON=""
     BATTERY_DISP=""
     BLOCK=""
     case $CHARGE_STATUS in
-	"Discharging") CHARGE_ICON="${BPP_COLOR[WARNING]}${BPP_GLYPHS[DOWNARROW]}${BPP_COLOR[RESET]}";;
-	"Charging")    CHARGE_ICON="${BPP_COLOR[GOOD]}${BPP_GLYPHS[ZAP]}${BPP_COLOR[RESET]}";;
-	*)           CHARGE_ICON="${BPP_COLOR[GOOD]}$CHARGE_STATUS${BPP_COLOR[RESET]}";;
+        "Discharging") CHARGE_ICON="${BPP_COLOR[WARNING]}${BPP_GLYPHS[DOWNARROW]}${BPP_COLOR[RESET]}";;
+        "Charging")    CHARGE_ICON="${BPP_COLOR[GOOD]}${BPP_GLYPHS[ZAP]}${BPP_COLOR[RESET]}";;
+        *)           CHARGE_ICON="${BPP_COLOR[GOOD]}$CHARGE_STATUS${BPP_COLOR[RESET]}";;
     esac
     CHARGE_ICON="${CHARGE_ICON}"
     BLOCK=$(bpp_get_block_height $BATTERY_LEVEL)
     case $BATTERY_LEVEL in
-	100* | [987654]*) BATTERY_DISP="${BPP_COLOR[GOOD]}";;
-	[32]*) BATTERY_DISP="${BPP_COLOR[WARNING]}";;
-	*) BATTERY_DISP="${BPP_COLOR[CRITICAL]}";;
+        100* | [987654]*) BATTERY_DISP="${BPP_COLOR[GOOD]}";;
+        [32]*) BATTERY_DISP="${BPP_COLOR[WARNING]}";;
+        *) BATTERY_DISP="${BPP_COLOR[CRITICAL]}";;
     esac
     BATTERY_DISP+="${BLOCK} ${BATTERY_LEVEL}"
     echo "${BATTERY_DISP}${CHARGE_ICON}${BPP_COLOR[RESET]}"
@@ -507,28 +527,28 @@ function bpp_get_block_height {
     BLOCK9="█"
     BLOCK=""
     if [ ! -z "$2" ]; then
-	# Horizontal
-	BLOCK9="█"
-	BLOCK8="▉"
-	BLOCK7="▊"
-	BLOCK6="▋"
-	BLOCK5="▋"
-	BLOCK4="▌"
-	BLOCK3="▍"
-	BLOCK2="▎"
-	BLOCK1="▏"
+        # Horizontal
+        BLOCK9="█"
+        BLOCK8="▉"
+        BLOCK7="▊"
+        BLOCK6="▋"
+        BLOCK5="▋"
+        BLOCK4="▌"
+        BLOCK3="▍"
+        BLOCK2="▎"
+        BLOCK1="▏"
     fi
     case $height in
-	100*) BLOCK="$BLOCK9";;
-	9*) BLOCK="$BLOCK8";;
-	8*) BLOCK="$BLOCK7";;
-	7*) BLOCK="$BLOCK6";;
-	6*) BLOCK="$BLOCK5";;
-	5*) BLOCK="$BLOCK4";;
-	4*) BLOCK="$BLOCK3";;
-	3*) BLOCK="$BLOCK3";;
-	2*) BLOCK="$BLOCK2";;
-	*) BLOCK="$BLOCK1";;
+        100*) BLOCK="$BLOCK9";;
+        9*) BLOCK="$BLOCK8";;
+        8*) BLOCK="$BLOCK7";;
+        7*) BLOCK="$BLOCK6";;
+        6*) BLOCK="$BLOCK5";;
+        5*) BLOCK="$BLOCK4";;
+        4*) BLOCK="$BLOCK3";;
+        3*) BLOCK="$BLOCK3";;
+        2*) BLOCK="$BLOCK2";;
+        *) BLOCK="$BLOCK1";;
     esac
     echo "$BLOCK"
 }
@@ -541,26 +561,26 @@ function bpp_cpu_temp {
     BPP_OPTIONS[TEMP_WARN]=${BPP_OPTIONS[TEMP_WARN]:-55}
 
     if [[ -f /sys/class/thermal/thermal_zone0/temp ]]; then
-	TEMP=$(echo $(cat /sys/class/thermal/thermal_zone*/temp 2>/dev/null | sort -rn | head -1) 1000 / p | dc)
+        TEMP=$(echo $(cat /sys/class/thermal/thermal_zone*/temp 2>/dev/null | sort -rn | head -1) 1000 / p | dc)
     else
-	BPP_ENABLED[TEMP]=0 # Disable the module
-	return
+        BPP_ENABLED[TEMP]=0 # Disable the module
+        return
     fi
 
     if [[ -z $TEMP ]]; then
-	# No attempts to get temperature were successful
-	return
+        # No attempts to get temperature were successful
+        return
     fi
 
     if [[ "$TEMP" -lt "${BPP_OPTIONS[TEMP_HIDE_BELOW]}" ]]; then
-	return
+        return
     fi
 
     COLOR=${BPP_COLOR[GOOD]}
     if [ $(echo "$TEMP > ${BPP_OPTIONS[TEMP_CRIT]}" | bc) == 1 ]; then
-	COLOR="${BPP_COLOR[CRITICAL]}"
+        COLOR="${BPP_COLOR[CRITICAL]}"
     elif [ $(echo "$TEMP > ${BPP_OPTIONS[TEMP_WARN]}" | bc) == 1 ]; then
-	COLOR="${BPP_COLOR[WARNING]}"
+        COLOR="${BPP_COLOR[WARNING]}"
     fi
     temp_status="${COLOR}$TEMP°${BPP_COLOR[RESET]}"
     echo $temp_status
@@ -593,13 +613,13 @@ function bpp_text {
 
     # Eval any expressions
     if [[ ${TEXT:0:1} == '$' ]]; then
-	RES=$(eval echo -n $TEXT)
+        RES=$(eval echo -n $TEXT)
     else
-	RES=$TEXT
+        RES=$TEXT
     fi
 
     [[ "${RES}" ]] && \
-	echo -n "${BPP_COLOR[INFO]}${RES}"
+        echo -n "${BPP_COLOR[INFO]}${RES}"
 }
 ### Prompt Examples
 
@@ -611,28 +631,28 @@ function bpp-compact-prompt {
     BPP_DATA[DECORATOR]=bpp_decorate
     BPP_ENABLED[VCS_REMOTE]=0
     export BPP=("EXE bpp_set_title"
-		"EXE bpp_history"
-		"CMD bpp_vcs"
-		"STRDEC \\w"
-		"STR \$")
+                "EXE bpp_history"
+                "CMD bpp_vcs"
+                "STRDEC \\w"
+                "STR \$")
 }
 
 function bpp-fancy-prompt {
     BPP_DATA[DECORATOR]=bpp_decorate
     BPP=("EXE bpp_set_title"
-	 "EXE bpp_history"
-	 "CMD bpp_error"
-	 "STR ${BPP_GLYPHS[NEWLINE]}${BPP_COLOR[DECORATION]}${BPP_GLYPHS[TOP]} "
-	 "CMD bpp_user_and_host"
-	 "CMD bpp_uptime"
-	 "CMD bpp_acpi"
-	 "CMD bpp_venv"
-	 "CMD bpp_cpu_temp"
-	 "CMD bpp_text top"
-	 "STR ${BPP_GLYPHS[NEWLINE]}${BPP_COLOR[DECORATION]}${BPP_GLYPHS[BOTTOM]}${BPP_COLOR[RESET]}"
-	 "CMD bpp_text bottom"
-	 "CMD bpp_vcs"
-	 "STR ${BPP_COLOR[DECORATION]}${BPP_GLYPHS[OPEN]}${BPP_COLOR[RESET]}\w${BPP_COLOR[DECORATION]}${BPP_GLYPHS[CLOSE]}\$")
+         "EXE bpp_history"
+         "CMD bpp_error"
+         "STR ${BPP_GLYPHS[NEWLINE]}${BPP_COLOR[DECORATION]}${BPP_GLYPHS[TOP]} "
+         "CMD bpp_user_and_host"
+         "CMD bpp_uptime"
+         "CMD bpp_acpi"
+         "CMD bpp_venv"
+         "CMD bpp_cpu_temp"
+         "CMD bpp_text top"
+         "STR ${BPP_GLYPHS[NEWLINE]}${BPP_COLOR[DECORATION]}${BPP_GLYPHS[BOTTOM]}${BPP_COLOR[RESET]}"
+         "CMD bpp_text bottom"
+         "CMD bpp_vcs"
+         "STR ${BPP_COLOR[DECORATION]}${BPP_GLYPHS[OPEN]}${BPP_COLOR[RESET]}\w${BPP_COLOR[DECORATION]}${BPP_GLYPHS[CLOSE]}\$")
 }
 
 function bpp-super-git-prompt {
@@ -645,11 +665,11 @@ function bpp-super-git-prompt {
 
 function bpp_super_git {
     if [ "$(git status 2>&1 >/dev/null)" ]; then
-	# Only if we're in a git project
-	return
+        # Only if we're in a git project
+        return
     fi
     if [[ ! $REMOTE ]]; then
-	REMOTE=local
+        REMOTE=local
     fi
     # Header
     REMOTE=$(git remote)
@@ -661,13 +681,13 @@ function bpp_super_git {
     echo ${BPP_COLOR[DECORATION]}${BPP_GLYPHS[MIDDLE]} ${REMOTE}: ${BPP_COLOR[WARNING]}${ORIGIN}${BPP_COLOR[RESET]}
 
     while read STATUS; do
-	echo "${BPP_COLOR[DECORATION]}${BPP_GLYPHS[MIDDLE]}${BPP_COLOR[RESET]} ${BPP_GOOD_COLOR}${STATUS}"
+        echo "${BPP_COLOR[DECORATION]}${BPP_GLYPHS[MIDDLE]}${BPP_COLOR[RESET]} ${BPP_GOOD_COLOR}${STATUS}"
     done <<< $(git diff --stat --color)
 
     while read FILE; do
-	if [[ ! -z $FILE ]]; then
-	    echo "${BPP_COLOR[DECORATION]}${BPP_GLYPHS[MIDDLE]} ${BPP_COLOR[WARNING]}${FILE}"
-	fi
+        if [[ ! -z $FILE ]]; then
+            echo "${BPP_COLOR[DECORATION]}${BPP_GLYPHS[MIDDLE]} ${BPP_COLOR[WARNING]}${FILE}"
+        fi
     done <<< $(git status --porcelain | grep ^??)
 }
 function bpp_venv {
@@ -675,28 +695,28 @@ function bpp_venv {
     env_path=''
     env_prefix=''
     for P in ${BPP_OPTIONS[VENV_PATHS]}; do
-	if [[ -f "./${P}/bin/activate" ]]; then
-	    env_path="./${P}/bin/activate"
-	    env_prefix=$P
-	    break;
-	fi
+        if [[ -f "./${P}/bin/activate" ]]; then
+            env_path="./${P}/bin/activate"
+            env_prefix=$P
+            break;
+        fi
     done
 
     if [[ ${BPP_ENABLED[VENV]} == 1 ]]; then
-	current=$(readlink -f .)
-	if [[ $VIRTUAL_ENV ]]; then
-	    here=$(basename $current)
-	    there=$(basename $VIRTUAL_ENV)
-	    if [[ ${current:0:${#VIRTUAL_ENV}} == ${VIRTUAL_ENV} ]]; then
-		VENV="${BPP_COLOR[INFO]}venv: ${there}"
-	    elif [[ ! -z "$env_path" ]]; then
-		VENV="${BPP_COLOR[CRITICAL]}venv: ${BPP_COLOR[WARNING]}${there} ${BPP_COLOR[CRITICAL]}vs${BPP_COLOR[WARNING]} $here"
-	    else
-		VENV="${BPP_COLOR[WARNING]}venv: $(basename ${VIRTUAL_ENV})"
-	    fi
-	elif [[ $env_path ]]; then
-	    VENV="${BPP_COLOR[WARNING]}venv available"
-	fi
+        current=$(readlink -f .)
+        if [[ $VIRTUAL_ENV ]]; then
+            here=$(basename $current)
+            there=$(basename $VIRTUAL_ENV)
+            if [[ ${current:0:${#VIRTUAL_ENV}} == ${VIRTUAL_ENV} ]]; then
+                VENV="${BPP_COLOR[INFO]}venv: ${there}"
+            elif [[ ! -z "$env_path" ]]; then
+                VENV="${BPP_COLOR[CRITICAL]}venv: ${BPP_COLOR[WARNING]}${there} ${BPP_COLOR[CRITICAL]}vs${BPP_COLOR[WARNING]} $here"
+            else
+                VENV="${BPP_COLOR[WARNING]}venv: $(basename ${VIRTUAL_ENV})"
+            fi
+        elif [[ $env_path ]]; then
+            VENV="${BPP_COLOR[WARNING]}venv available"
+        fi
     fi
     echo $VENV
 }
@@ -704,52 +724,52 @@ function bpp_venv {
 function bpp-venv {
     local ENVPATH
     for P in ${BPP_OPTIONS[VENV_PATHS]}; do
-	if [[ -f "./${P}/bin/activate" ]]; then
-	    ENVPATH="./${P}/bin/activate"
-	    break
-	fi
+        if [[ -f "./${P}/bin/activate" ]]; then
+            ENVPATH="./${P}/bin/activate"
+            break
+        fi
     done
 
     function load_env {
-	if [[ $ENVPATH ]]; then
-	    source $ENVPATH;
-	    export VIRTUAL_ENV=$(readlink -f .)
-	    echo "Loaded virtual environment: $ENVPATH"
-	else
-	    echo "No virtual environment found"
-	fi
+        if [[ $ENVPATH ]]; then
+            source $ENVPATH;
+            export VIRTUAL_ENV=$(readlink -f .)
+            echo "Loaded virtual environment: $ENVPATH"
+        else
+            echo "No virtual environment found"
+        fi
     }
 
     function unload_env {
-	if [[ $VIRTUAL_ENV ]]; then
-	    unset VIRTUAL_ENV
-	    deactivate
-	    echo "Unloaded virtual environment: $ENVPATH"
-	else
-	    echo "No virtual environment loaded"
-	fi
+        if [[ $VIRTUAL_ENV ]]; then
+            unset VIRTUAL_ENV
+            deactivate
+            echo "Unloaded virtual environment: $ENVPATH"
+        else
+            echo "No virtual environment loaded"
+        fi
     }
 
     function goto_env {
-	if [[ $VIRTUAL_ENV ]]; then
-	    cd $VIRTUAL_ENV || exit
-	    echo "Returned to virtual environment"
-	else
-	    echo "No virtual environment loaded"
-	fi
+        if [[ $VIRTUAL_ENV ]]; then
+            cd $VIRTUAL_ENV || exit
+            echo "Returned to virtual environment"
+        else
+            echo "No virtual environment loaded"
+        fi
     }
 
     case $1 in
-	'') if [[ $VIRTUAL_ENV ]]; then unload_env; else load_env;fi;;
-	'activate') load_env;;
-	'cd') goto_env;;
-	'deactivate') unload_env;;
-	'disable') unload_env;;
-	'go') goto_env;;
-	'load') load_env;;
-	'return') goto_env;;
-	'unload') unload_env;;
-	*) _bpp-venv; echo "Unknown action $1, try:${BOLD} ${COMPREPLY[*]} ${RESET}";;
+        '') if [[ $VIRTUAL_ENV ]]; then unload_env; else load_env;fi;;
+        'activate') load_env;;
+        'cd') goto_env;;
+        'deactivate') unload_env;;
+        'disable') unload_env;;
+        'go') goto_env;;
+        'load') load_env;;
+        'return') goto_env;;
+        'unload') unload_env;;
+        *) _bpp-venv; echo "Unknown action $1, try:${BOLD} ${COMPREPLY[*]} ${RESET}";;
     esac
 }
 function _bpp-venv {
@@ -857,53 +877,53 @@ function bpp_git_status() {
     local branch flags color
     branch=$(git rev-parse --abbrev-ref HEAD  2>/dev/null)
     if [[ -n "$branch" ]]; then
-	git_status=$(git status 2> /dev/null)
-	# If nothing changes the color, we can spot unhandled cases.
-	color=${BPP_COLOR[INFO]}
+        git_status=$(git status 2> /dev/null)
+        # If nothing changes the color, we can spot unhandled cases.
+        color=${BPP_COLOR[INFO]}
 
-	if [[ $(git stash show 2>/dev/null) ]]; then
-	    flags+="*"
-	fi
-	if [[ $git_status =~ 'working tree clean' ]]; then
-	    color=${BPP_COLOR[GOOD]}
-	fi
-	if [[ $git_status =~ 'Untracked files' ]]; then
-	    color=${BPP_COLOR[WARNING]}
-	    flags+="U"
-	fi
-	if [[ $git_status =~ 'Your branch is ahead' ]]; then
-	    color=${BPP_COLOR[WARNING]}
-	    flags+=">"
-	    (( BPP_OPTIONS[GIT_STAT_AHEAD] )) && \
-		flags+="${BPP_COLOR[RESET]}($(bpp_git_shortstat HEAD~))$color"
-	fi
-	if [[ $git_status =~ 'Changes to be committed' ]]; then
-	    color=${BPP_COLOR[WARNING]}
-	    flags+="S"
-	    (( BPP_OPTIONS[GIT_STAT_STAGE] )) && \
-		flags+="${BPP_COLOR[RESET]}($(bpp_git_shortstat --staged))$color"
-	fi
-	if [[ $git_status =~ 'Changes not staged' ]]; then
-	    color=${BPP_COLOR[WARNING]}
-	fi
-	if [[ $git_status =~ 'Changed but not updated' ||
-		  $git_status =~ 'Unmerged paths' ]]; then
-	    color=${BPP_COLOR[WARNING]}
-	    flags+="!"
-	fi
-	if [[ $git_status =~ 'Your branch'.+diverged ]]; then
-	    color=${BPP_COLOR[CRITICAL]}
-	    flags+="{"
-	fi
-	if [[ $git_status =~ 'Your branch is behind' ]]; then
-	    color=${BPP_COLOR[CRITICAL]}
-	    flags+="<"
-	fi
+        if [[ $(git stash show 2>/dev/null) ]]; then
+            flags+="*"
+        fi
+        if [[ $git_status =~ 'working tree clean' ]]; then
+            color=${BPP_COLOR[GOOD]}
+        fi
+        if [[ $git_status =~ 'Untracked files' ]]; then
+            color=${BPP_COLOR[WARNING]}
+            flags+="U"
+        fi
+        if [[ $git_status =~ 'Your branch is ahead' ]]; then
+            color=${BPP_COLOR[WARNING]}
+            flags+=">"
+            (( BPP_OPTIONS[GIT_STAT_AHEAD] )) && \
+                flags+="${BPP_COLOR[RESET]}($(bpp_git_shortstat HEAD~))$color"
+        fi
+        if [[ $git_status =~ 'Changes to be committed' ]]; then
+            color=${BPP_COLOR[WARNING]}
+            flags+="S"
+            (( BPP_OPTIONS[GIT_STAT_STAGE] )) && \
+                flags+="${BPP_COLOR[RESET]}($(bpp_git_shortstat --staged))$color"
+        fi
+        if [[ $git_status =~ 'Changes not staged' ]]; then
+            color=${BPP_COLOR[WARNING]}
+        fi
+        if [[ $git_status =~ 'Changed but not updated' ||
+                  $git_status =~ 'Unmerged paths' ]]; then
+            color=${BPP_COLOR[WARNING]}
+            flags+="!"
+        fi
+        if [[ $git_status =~ 'Your branch'.+diverged ]]; then
+            color=${BPP_COLOR[CRITICAL]}
+            flags+="{"
+        fi
+        if [[ $git_status =~ 'Your branch is behind' ]]; then
+            color=${BPP_COLOR[CRITICAL]}
+            flags+="<"
+        fi
 
-	if [[ -n "${flags}" ]]; then
-	    flags=":${flags}"
-	fi
-	echo -n "${color}${branch}${flags}${BPP_COLOR[RESET]}"
+        if [[ -n "${flags}" ]]; then
+            flags=":${flags}"
+        fi
+        echo -n "${color}${branch}${flags}${BPP_COLOR[RESET]}"
     fi
     return 0
 }
@@ -913,12 +933,12 @@ function bpp-show-colors {
     local ROWS=${1:-4}
     ## Show the 256 (we hope) colors available.
     for x in $(seq 0 255); do
-	col=$(printf "%03d" $x)
-	echo -ne "$(bpp_mk_color $x)Color ${col} $(bpp_mk_bgcolor $col)  "\
-	     "$(bpp_mk_color 0)${col}$(bpp_mk_color $x)34${RESET}\t"
-	if [ $[ $x % ${ROWS} ] == 0 ] ; then
-	    echo
-	fi
+        col=$(printf "%03d" $x)
+        echo -ne "$(bpp_mk_color $x)Color ${col} $(bpp_mk_bgcolor $col)  "\
+             "$(bpp_mk_color 0)${col}$(bpp_mk_color $x)34${RESET}\t"
+        if [ $[ $x % ${ROWS} ] == 0 ] ; then
+            echo
+        fi
     done
 }
 
@@ -926,16 +946,16 @@ function bpp-show-prompt {
     local j
     j=0
     for line in "${BPP[@]}"; do
-	echo $j: $line
-	j=$[ $j + 1 ];
+        echo $j: $line
+        j=$[ $j + 1 ];
     done | sed 's/\\\[[^]]*\]/[FMT]/g'
 }
 
 declare -A BPP_NOTES
 if [[ "$BPP_NOTE" == 1 || -z "$BPP_NOTE" ]]; then
     if [ -f "${BPP_OPTIONS[NOTE_FILE]}" ]; then
-	source "${BPP_OPTIONS[NOTE_FILE]}"
-	export BPP_NOTES
+        source "${BPP_OPTIONS[NOTE_FILE]}"
+        export BPP_NOTES
     fi
 fi
 
@@ -943,25 +963,25 @@ function bpp_note {
     local PWD
     PWD=$(pwd)
     if [[ "$BPP_ENABLED[NOTE]" == 0 ]]; then
-	return
+        return
     fi
 
     if [[ "${BPP_DATA[OLDPWD]}" == "$PWD" ]]; then
-	if [ "${BPP_OPTIONS[NOTE_ON_ENTRY]}" == "1" ]; then
-	    return
-	fi
+        if [ "${BPP_OPTIONS[NOTE_ON_ENTRY]}" == "1" ]; then
+            return
+        fi
     fi
 
     BPP_NOTES[PWD]=$PWD
     NOTE="${BPP_NOTES[${PWD}]}"
 
     if [ -z "$NOTE" ]; then
-	return
+        return
     fi
 
     local IFS=$'\n'
     while read LINE; do
-	echo -n "${BPP_GLYPHS[NEWLINE]}${BPP_COLOR[DECORATION]}${BPP_GLYPHS[MIDDLE]} * ${BPP_COLOR[WARNING]}${LINE}"
+        echo -n "${BPP_GLYPHS[NEWLINE]}${BPP_COLOR[DECORATION]}${BPP_GLYPHS[MIDDLE]} * ${BPP_COLOR[WARNING]}${LINE}"
     done <<< $(echo "$NOTE")
 }
 
@@ -978,7 +998,7 @@ function _bpp_note_add {
     local MESSAGE=$1
     local DIR=${2:-$(pwd)}
     if [ ! -z "${BPP_NOTES[$DIR]}" ]; then
-	MESSAGE="${BPP_NOTES[$DIR]}"$'\n'"$MESSAGE"
+        MESSAGE="${BPP_NOTES[$DIR]}"$'\n'"$MESSAGE"
     fi
     BPP_NOTES[$DIR]=$MESSAGE
     unset BPP_DATA[OLDPWD]
