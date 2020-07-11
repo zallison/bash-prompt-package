@@ -104,7 +104,7 @@ function bpp_error {
         MESSAGE="Invalid Exit Status"
     else
         MESSAGE=${BPP_DATA[EXIT_STATUS]}
-        (( BPP_OPTIONS[VERBOSE_ERROR] )) && MESSAGE+=" - ${BPP_ERRORS[$ERR]}"
+        (( BPP_OPTIONS[VERBOSE_ERROR] )) && MESSAGE+=" - ${BPP_ERRORS[$ERR]:-Unknown or nonstandard error}"
     fi
     EXIT="${BPP_COLOR[CRITICAL]}error: ${MESSAGE}"
 
