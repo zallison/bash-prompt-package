@@ -2,10 +2,13 @@
 function bpp_prompt_command {
     BPP_DATA[EXIT_STATUS]=$?
     PS1="${BPP_COLOR[RESET]}"
-    for ((i=0; i<${#BPP[*]}; i++)); do
+    max=${#BPP[*]}
+    local i=0
+    while [ "$i" -le $max ]; do
         module=${BPP[$i]}
         local IFS=" "
         bpp_exec_module $i $module
+        i=$(( i + 1 ))
     done
     PS1="${PS1}${BPP_COLOR[RESET]} "
     BPP_DATA[OLDPWD]=$(pwd)
