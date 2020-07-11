@@ -9,29 +9,26 @@ function bpp_date {
 }
 
 function bpp_uptime {
+    local cores
+    cores=$(nproc --all)
     UPTIME=""
     if [[ ${BPP_ENABLED[UPTIME]} == 1 ]]; then
-        BPP_OPTIONS[UPTIME_SEPERATOR]=${BPP_OPTIONS[UPTIME_SEPERATOR]:=}
-        BPP_OPTIONS[UPTIME_BLOCK]=${BPP_OPTIONS[UPTIME_BLOCK]:=1}
         function colorize_load {
+            local load color relative_load adjusted_load
             load=$1
-            cores=$(nproc --all)
-            color=""
-            # Relative load = Constant (125) * (load / #cores)
+            color=${BPP_COLOR[GOOD]}
+            # Relative load = (load - #cores) / #cores
 
             # This accounts for how "bad" the load is.  A load of 8 on a dual
             # core system is a lot worse than a load of 8 on a 64 core system.
 
-            # A relative load of < 40 is good
-            # < 70 is a warning
-            # >= 70 is critical
+            relative_load=$( bc <<< "scale=4; ($load - $cores) / ${cores}" )
 
-            relative_load=$(echo "5k 125 ${uptime} ${cores} / *p" | dc)
-            case $relative_load in
-                [456]?.*) color=${BPP_COLOR[WARNING]};;
-                0* | .* | [0-9].* | [0123]?.*) color=${BPP_COLOR[GOOD]};;
-                *) color=${BPP_COLOR[CRITICAL]};;
-            esac
+            if [[ $(bc <<< "$relative_load > .5") = 1 ]]; then
+                color=${BPP_COLOR[WARNING]}
+            elif [[ $(bc <<< "$relative_load > 1.1") = 1 ]]; then
+                color=${BPP_COLOR[CRITICAL]}
+            fi
 
             if [ ${BPP_OPTIONS[UPTIME_BLOCK]} == 1 ]; then
                 echo ${color}$load$(bpp_get_block_height $relative_load)
@@ -39,6 +36,9 @@ function bpp_uptime {
                 echo ${color}$load
             fi
         }
+
+        BPP_OPTIONS[UPTIME_SEPERATOR]=${BPP_OPTIONS[UPTIME_SEPERATOR]:=}
+        BPP_OPTIONS[UPTIME_BLOCK]=${BPP_OPTIONS[UPTIME_BLOCK]:=1}
 
         LOAD=$(uptime| sed 's/.*: //' | sed 's/, / /g')
 
