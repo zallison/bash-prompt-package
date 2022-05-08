@@ -142,7 +142,6 @@ function bpp_git_status() {
 
         if [[ $git_status =~ 'Changes not staged' ]]; then
             color=${BPP_COLOR[WARNING]}
-	    flags+="&"
         fi
 
         if [[ $git_status =~ 'Your branch'.+diverged ]]; then
