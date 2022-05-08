@@ -280,45 +280,49 @@ function bpp_uptime {
     cores=$(nproc --all)
     UPTIME=""
     if [[ ${BPP_ENABLED[UPTIME]} == 1 ]]; then
+	local relative_load ignore warn
+	warn=.7
+	display=.5
+
+        BPP_OPTIONS[UPTIME_SEPERATOR]=${BPP_OPTIONS[UPTIME_SEPERATOR]:=}
+        BPP_OPTIONS[UPTIME_BLOCK]=${BPP_OPTIONS[UPTIME_BLOCK]:=1}
+	
         function colorize_load {
-            local load color relative_load adjusted_load
+            local load color
             load=$1
             color=${BPP_COLOR[GOOD]}
-            # Relative load = (load - #cores) / #cores
+	    relative_load=$( bc <<< "scale=4;  $val / ${cores} * 100" )
 
-            # This accounts for how "bad" the load is.  A load of 8 on a dual
-            # core system is a lot worse than a load of 8 on a 64 core system.
-
-            relative_load=$( bc <<< "scale=4; ($load - $cores) / ${cores}" )
-
-            if [[ $(bc <<< "$relative_load > .5") = 1 ]]; then
+            if [[ $(bc <<< "$load > ${warn}") = 1 ]]; then
                 color=${BPP_COLOR[WARNING]}
-            elif [[ $(bc <<< "$relative_load > 1.1") = 1 ]]; then
+            elif [[ $(bc <<< "$load > 1.1") = 1 ]]; then
                 color=${BPP_COLOR[CRITICAL]}
             fi
 
-            if [ ${BPP_OPTIONS[UPTIME_BLOCK]} == 1 ]; then
+            if [[ ${BPP_OPTIONS[UPTIME_BLOCK]} == 1 ]]; then
                 echo ${color}$load$(bpp_get_block_height $relative_load)
             else
                 echo ${color}$load
             fi
         }
 
-        BPP_OPTIONS[UPTIME_SEPERATOR]=${BPP_OPTIONS[UPTIME_SEPERATOR]:=}
-        BPP_OPTIONS[UPTIME_BLOCK]=${BPP_OPTIONS[UPTIME_BLOCK]:=1}
 
-        LOAD=$(uptime| sed 's/.*: //' | sed 's/, / /g')
-
-        for val in $LOAD; do
+        load=$(uptime| sed 's/.*: //' | sed 's/, / /g')
+	ignore=1
+        for val in $load; do
+            if [[ $(bc <<< "$val > ${display}") == 1 ]]; then
+                ignore=0
+	    fi	    
             UPTIME+="$(colorize_load ${val})${BPP_OPTIONS[UPTIME_SEPERATOR]}"
         done
+
+	[[ $ignore == 0 ]] && echo $UPTIME
     fi
 
-    echo $UPTIME
 }
 
 function bpp_user_and_host {
-    (( BPP_ENABLED[USER] )) || return
+    [[ BPP_ENABLED[USER] ]] || return
 
     if [ -z "$SSH_CONNECTION" ]; then
         # Local
@@ -349,9 +353,28 @@ function bpp_user_and_host {
 
 # bpp_error - show the exit code of the last process
 declare -a BPP_ERRORS
-BPP_ERRORS[1]="General error"
+# BPP_ERRORS[0]="OK Successful termination"
+BPP_ERRORS[1]="General Error"
 BPP_ERRORS[2]="Missing keyword, command, or permission problem"
-BPP_ERRORS[126]="Permission problem or command is not an executable"
+BPP_ERRORS[13]="Permission Denied"
+
+BPP_ERRORS[64]="Command line usage error"
+BPP_ERRORS[65]="Data format error"
+BPP_ERRORS[66]="Cannot open input"
+BPP_ERRORS[67]="Addressee unknown"
+BPP_ERRORS[68]="Host name unknown"
+BPP_ERRORS[69]="Service unavailable"
+BPP_ERRORS[70]="Internal software error, Needed file/directory not_found/wrong_contents"
+BPP_ERRORS[71]="System error"
+BPP_ERRORS[72]="Critical OS file missing"
+BPP_ERRORS[73]="Can\'t create (user) output file/directory"
+BPP_ERRORS[74]="Input/output error"
+BPP_ERRORS[75]="Temp failure; user is invited to retry"
+BPP_ERRORS[76]="Remote error in protocol"
+BPP_ERRORS[77]="Permission denied"
+BPP_ERRORS[78]="Configuration error"
+
+BPP_ERRORS[126]="Command invoked cannot execute"
 BPP_ERRORS[127]="Command not found"
 BPP_ERRORS[128]="Invalid argument to exit"
 BPP_ERRORS[129]="Fatal error signal 1"
@@ -363,10 +386,11 @@ BPP_ERRORS[134]="Fatal error signal 6"
 BPP_ERRORS[135]="Fatal error signal 7"
 BPP_ERRORS[136]="Fatal error signal 8"
 BPP_ERRORS[137]="Fatal error signal 9"
-
+BPP_ERRORS[255]="EXIT_OUT_LIMITS Exit status out of range(0..255)"
+								    
 function bpp_error {
-    (( BPP_ENABLED[ERROR] )) || return
-    (( BPP_DATA[EXIT_STATUS] )) || return
+    [[ BPP_ENABLED[ERROR] == 0 ]] || return
+    [[ BPP_DATA[EXIT_STATUS] ]] || return
 
     local ERR=${BPP_DATA[EXIT_STATUS]}
     local EXIT MESSAGE
@@ -375,7 +399,7 @@ function bpp_error {
         MESSAGE="Invalid Exit Status"
     else
         MESSAGE=${BPP_DATA[EXIT_STATUS]}
-        (( BPP_OPTIONS[VERBOSE_ERROR] )) && MESSAGE+=" - ${BPP_ERRORS[$ERR]:-Unknown or nonstandard error}"
+        [[ BPP_OPTIONS[VERBOSE_ERROR] ]] && MESSAGE+=" - ${BPP_ERRORS[$ERR]:-Unknown or nonstandard error}"
     fi
     EXIT="${BPP_COLOR[CRITICAL]}error: ${MESSAGE}"
 
@@ -383,18 +407,18 @@ function bpp_error {
 }
 
 function bpp_dirinfo {
-    (( BPP_ENABLED[DIRINFO] )) || return
+    [[ ${BPP_ENABLED[DIRINFO]} == 1 ]] || return
 
     FILES="$(/bin/ls -F | grep -cv /$)${BPP_COLOR[GOOD]}${BPP_GLYPHS[FILE]}${BPP_COLOR[RESET]}"
     DIRSIZE="$(/bin/ls -lah | /bin/grep -m 1 total | /bin/sed 's/total //')"
     DIRS="$(/bin/ls -F | grep -c /$)${BPP_COLOR[GOOD]}${BPP_GLYPHS[FOLDER]}${BPP_COLOR[RESET]}"
-    DIRINFO="${FILES} ${DIRS} ${DIRSIZE}"
+    DIRINFO="${DIRS} ${FILES} ${DIRSIZE}"
 
     echo $DIRINFO
 }
 
 function bpp_set_title() {
-    (( BPP_ENABLED[SET_TITLE] )) || return
+    [[ BPP_ENABLED[SET_TITLE] == 1 ]] || return
 
     function set_title {
         if [[ ! -z $TMUX && -z $SSH ]]; then
@@ -420,7 +444,7 @@ function bpp_set_title() {
 }
 
 function bpp_emacs_ansiterm_path_info() {
-    (( BPP_ENABLED[EMACS] )) || return
+    [[ BPP_ENABLED[EMACS] == 1 ]] || return
 
     local ssh_hostname
 
@@ -449,7 +473,7 @@ function bpp_emacs_ansiterm_path_info() {
 
 
 function bpp_emacs_vterm_path_info() {
-    (( BPP_ENABLED[EMACS] )) || return
+    [[ BPP_ENABLED[EMACS] == 1 ]] || return
 
     local ssh_hostname
 
@@ -481,7 +505,7 @@ function bpp_emacs_vterm_path_info() {
 }
 
 function bpp_acpi {
-    (( BPP_ENABLED[ACPI] )) || return
+    [[ ${BPP_ENABLED[ACPI]} == 1 ]] || return
     local ACPI BATTERY_LEVEL CHARGE_STATUS CHARGE_ICON BATTERY_DISP BLOCK
     ACPI=$(acpi 2>/dev/null | head -1 | awk '{print $3 $4}' | tr ,% \ \ )
     BATTERY_LEVEL=${ACPI#* }
@@ -554,7 +578,7 @@ function bpp_get_block_height {
 }
 
 function bpp_cpu_temp {
-    (( BPP_ENABLED[TEMP] )) || return
+    [[ ${BPP_ENABLED[TEMP]} == 1 ]] || return
     local TEMP
 
     BPP_OPTIONS[TEMP_CRIT]=${BPP_OPTIONS[TEMP_CRIT]:-65}
@@ -779,22 +803,20 @@ function _bpp-venv {
 complete -F _bpp-venv bpp-venv
 function bpp_vcs {
     INDEX=$1
-    local VCS_TYPE
 
-    if [[ -z "$BPP_ENABLED[VCS]" || ${BPP_ENABLED[VCS]} == 0 ]]; then
-        VCS=""
-    elif [ -e .svn ] ; then
+    if [ -e .svn ] ; then
         VCS=$(bpp_svn)
         VCS_TYPE="svn"
     elif [[ $(git status 2> /dev/null) ]]; then
         VCS=$(bpp_git)
         VCS_TYPE="git"
     fi
+
     if [[ $VCS ]]; then
-        if [[ ${BPP_ENABLED[VCS_TYPE]} == 0 ]]; then
-            VCS="${VCS}"
-        else
+        if [[ ${BPP_ENABLED[VCS_TYPE]} == 1 ]]; then
             VCS="${VCS_TYPE} ${VCS}"
+	else
+            VCS="${VCS}"
         fi
     fi
 
@@ -818,7 +840,7 @@ function bpp_svn {
 }
 
 function bpp_git_shortstat() {
-    (( BPP_ENABLED[VCS] == 1)) || return 0
+    [[ ${BPP_ENABLED[VCS]} ]] || return 0
     BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
     [[ "$BRANCH" ]] || return 0
 
@@ -850,15 +872,17 @@ function bpp_git_shortstat() {
 }
 
 function bpp_git() {
-    (( BPP_ENABLED[VCS] == 1)) || return
+    [[ ${BPP_ENABLED[VCS]} == "1" ]] || return
 
     GIT="";
     STATUS=$(bpp_git_status)
     DETAILS=$(bpp_git_shortstat)
+
     if [[ $DETAILS ]]; then
-        STATUS="${STATUS} ${DETAILS}";
+        STATUS="${STATUS}${DETAILS}";
     fi
-    if [[ ${BPP_ENABLED[VCS_REMOTE]} == 1 ]]; then
+
+    if [[ ${BPP_ENABLED[VCS_REMOTE]} == "1" ]]; then
         REMOTE=$(git remote -v | head -n1 | awk '{print $2}' | sed 's/.*\///' | sed 's/\.git//')
         if [[ ! $REMOTE ]]; then
             REMOTE=local
@@ -867,6 +891,7 @@ function bpp_git() {
     else
         GIT="${BPP_COLOR[RESET]}$STATUS";
     fi
+
     echo $GIT
 }
 
@@ -875,46 +900,59 @@ BPP_OPTIONS[GIT_STAT_STAGE]=0
 function bpp_git_status() {
     command -v git 2>&1 > /dev/null || return
     local branch flags color
-    branch=$(git rev-parse --abbrev-ref HEAD  2>/dev/null)
+
+    branch=$(__git_ps1 | cut -c 2- | sed 's/[()]//g')
+
     if [[ -n "$branch" ]]; then
         git_status=$(git status 2> /dev/null)
         # If nothing changes the color, we can spot unhandled cases.
         color=${BPP_COLOR[INFO]}
 
-        if [[ $(git stash show 2>/dev/null) ]]; then
-            flags+="*"
-        fi
-        if [[ $git_status =~ 'working tree clean' ]]; then
-            color=${BPP_COLOR[GOOD]}
-        fi
-        if [[ $git_status =~ 'Untracked files' ]]; then
-            color=${BPP_COLOR[WARNING]}
-            flags+="U"
-        fi
-        if [[ $git_status =~ 'Your branch is ahead' ]]; then
-            color=${BPP_COLOR[WARNING]}
-            flags+=">"
-            (( BPP_OPTIONS[GIT_STAT_AHEAD] )) && \
-                flags+="${BPP_COLOR[RESET]}($(bpp_git_shortstat HEAD~))$color"
-        fi
-        if [[ $git_status =~ 'Changes to be committed' ]]; then
-            color=${BPP_COLOR[WARNING]}
-            flags+="S"
-            (( BPP_OPTIONS[GIT_STAT_STAGE] )) && \
-                flags+="${BPP_COLOR[RESET]}($(bpp_git_shortstat --staged))$color"
-        fi
-        if [[ $git_status =~ 'Changes not staged' ]]; then
-            color=${BPP_COLOR[WARNING]}
-        fi
         if [[ $git_status =~ 'Changed but not updated' ||
                   $git_status =~ 'Unmerged paths' ]]; then
             color=${BPP_COLOR[WARNING]}
             flags+="!"
         fi
+
+        if [[ $(git stash show 2>/dev/null) ]]; then
+            flags+="*"
+        fi
+
+        if [[ $git_status =~ 'working tree clean' ]]; then
+            color=${BPP_COLOR[GOOD]}
+        fi
+
+        if [[ $git_status =~ 'Untracked files' ]]; then
+            color=${BPP_COLOR[WARNING]}
+            flags+="U"
+        fi
+
+        if [[ $git_status =~ 'Your branch is ahead' ]]; then
+            color=${BPP_COLOR[WARNING]}
+            flags+=">"
+            [[ BPP_OPTIONS[GIT_STAT_AHEAD] ]] &&
+                flags+="ahead:${BPP_COLOR[RESET]}($(bpp_git_shortstat HEAD~))"
+        fi
+
+        if [[ $git_status =~ 'Changes to be committed' ]]; then
+            color=${BPP_COLOR[WARNING]}
+            if [[ ${BPP_OPTIONS[GIT_STAT_STAGE]} == "1" ]]; then
+                flags+=" (staged:$(bpp_git_shortstat --staged))"
+	    else
+		flags+="S"
+	    fi
+        fi
+
+        if [[ $git_status =~ 'Changes not staged' ]]; then
+            color=${BPP_COLOR[WARNING]}
+	    flags+="&"
+        fi
+
         if [[ $git_status =~ 'Your branch'.+diverged ]]; then
             color=${BPP_COLOR[CRITICAL]}
             flags+="{"
         fi
+
         if [[ $git_status =~ 'Your branch is behind' ]]; then
             color=${BPP_COLOR[CRITICAL]}
             flags+="<"
@@ -923,7 +961,8 @@ function bpp_git_status() {
         if [[ -n "${flags}" ]]; then
             flags=":${flags}"
         fi
-        echo -n "${color}${branch}${flags}${BPP_COLOR[RESET]}"
+
+        echo -n "${color}${branch}${flags}${BPP_COLOR[RESET]} "
     fi
     return 0
 }

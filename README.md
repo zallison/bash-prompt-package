@@ -211,9 +211,17 @@ Example:
 		fi
 	}
 
+<<<<<<< HEAD
 or declare it in a STR:
 
     "STR $(ls -l *sh | wc -l) bash files"
+=======
+and add bpp_scriptcount to your prompt list.
+
+or declare it in a STR:
+
+    "STR \$(ls -l *sh | wc -l) bash files"
+>>>>>>> b5b6a8c (Import of bash-prompt-property)
 
 or set a "text" object: `CMD bpp_text mytext` and then:
 
