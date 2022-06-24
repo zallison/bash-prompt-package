@@ -12,7 +12,7 @@ function bpp_vcs {
     if [[ $VCS ]]; then
         if [[ ${BPP_ENABLED[VCS_TYPE]} == 1 ]]; then
             VCS="${VCS_TYPE} ${VCS}"
-	else
+        else
             VCS="${VCS}"
         fi
     fi
@@ -126,8 +126,9 @@ function bpp_git_status() {
 
         if [[ $git_status =~ 'Your branch is ahead' ]]; then
             color=${BPP_COLOR[WARNING]}
-            flags+=">"
-            [[ BPP_OPTIONS[GIT_STAT_AHEAD] ]] &&
+            [[ $BPP_OPTIONS[GIT_STAT_AHEAD] ]] ||
+                flags+=">"
+            [[ $BPP_OPTIONS[GIT_STAT_AHEAD] ]] &&
                 flags+="ahead:${BPP_COLOR[RESET]}($(bpp_git_shortstat HEAD~))"
         fi
 
@@ -135,13 +136,14 @@ function bpp_git_status() {
             color=${BPP_COLOR[WARNING]}
             if [[ ${BPP_OPTIONS[GIT_STAT_STAGE]} == "1" ]]; then
                 flags+=" (staged:$(bpp_git_shortstat --staged))"
-	    else
-		flags+="S"
-	    fi
+            else
+                flags+="S"
+            fi
         fi
 
         if [[ $git_status =~ 'Changes not staged' ]]; then
             color=${BPP_COLOR[WARNING]}
+            flags+="m"
         fi
 
         if [[ $git_status =~ 'Your branch'.+diverged ]]; then

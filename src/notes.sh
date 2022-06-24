@@ -1,4 +1,3 @@
-
 declare -A BPP_NOTES
 if [[ "$BPP_NOTE" == 1 || -z "$BPP_NOTE" ]]; then
     if [ -f "${BPP_OPTIONS[NOTE_FILE]}" ]; then

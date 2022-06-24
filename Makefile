@@ -1,8 +1,9 @@
 #!/usr/bin/make
 
+INSTALL_PATH=~/.bashrc.d/
+
 BASEDIR=src
-# Customize the output location
-# eg OUTPUT=my-bpp.sh make
+
 OUTPUT ?= bash-prompt-package.sh
 
 # All files
@@ -23,6 +24,9 @@ compile: clean
 	for X in ${TARGETS}; do \
 	   cat ${BASEDIR}/$$X >> ${OUTPUT}; \
 	done
+
+install: compile
+	mkdir -p "${INSTALL_PATH}" && cp "${OUTPUT}" "${INSTALL_PATH}"
 
 test: clean
 	bats tests

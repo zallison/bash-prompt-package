@@ -13,18 +13,18 @@ function bpp_uptime {
     cores=$(nproc --all)
     UPTIME=""
     if [[ ${BPP_ENABLED[UPTIME]} == 1 ]]; then
-	local relative_load ignore warn
-	warn=.7
-	display=.5
+        local relative_load ignore warn
+        warn=.7
+        display=.5
 
         BPP_OPTIONS[UPTIME_SEPERATOR]=${BPP_OPTIONS[UPTIME_SEPERATOR]:=}
         BPP_OPTIONS[UPTIME_BLOCK]=${BPP_OPTIONS[UPTIME_BLOCK]:=1}
-	
+
         function colorize_load {
             local load color
             load=$1
             color=${BPP_COLOR[GOOD]}
-	    relative_load=$( bc <<< "scale=4;  $val / ${cores} * 100" )
+            relative_load=$( bc <<< "scale=4;  $val / ${cores} * 100" )
 
             if [[ $(bc <<< "$load > ${warn}") = 1 ]]; then
                 color=${BPP_COLOR[WARNING]}
@@ -41,15 +41,15 @@ function bpp_uptime {
 
 
         load=$(uptime| sed 's/.*: //' | sed 's/, / /g')
-	ignore=1
+        ignore=1
         for val in $load; do
             if [[ $(bc <<< "$val > ${display}") == 1 ]]; then
                 ignore=0
-	    fi	    
+            fi
             UPTIME+="$(colorize_load ${val})${BPP_OPTIONS[UPTIME_SEPERATOR]}"
         done
 
-	[[ $ignore == 0 ]] && echo $UPTIME
+        [[ $ignore == 0 ]] && echo $UPTIME
     fi
 
 }
@@ -120,7 +120,6 @@ BPP_ERRORS[135]="Fatal error signal 7"
 BPP_ERRORS[136]="Fatal error signal 8"
 BPP_ERRORS[137]="Fatal error signal 9"
 BPP_ERRORS[255]="EXIT_OUT_LIMITS Exit status out of range(0..255)"
-								    
 function bpp_error {
     [[ BPP_ENABLED[ERROR] == 0 ]] || return
     [[ BPP_DATA[EXIT_STATUS] ]] || return

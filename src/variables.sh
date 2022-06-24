@@ -6,4 +6,3 @@ declare -A BPP_GLYPHS
 declare -A BPP_COLOR
 declare -A BPP_BGCOLOR
 declare -A BPP_TEXT
-

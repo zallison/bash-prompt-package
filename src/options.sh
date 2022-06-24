@@ -34,7 +34,7 @@ BPP_OPTIONS[VERBOSE_ERROR]=1
 BPP_DATA[OLDPWD]=""
 # Command to "decorate" text.  By default `bpp_decorate` wraps it in ❰ and ❱
 # This is run on each "CMD" entry.
-BPP_DATA[DECORATOR]="bpp_decorate" 
+BPP_DATA[DECORATOR]="bpp_decorate"
 
 # Bash Options
 export PROMPT_DIRTRIM=3
