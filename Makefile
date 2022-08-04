@@ -1,6 +1,6 @@
 #!/usr/bin/make
 
-INSTALL_PATH=~/.bashrc.d/
+INSTALL_PATH=${HOME}/.bashrc.d/
 
 BASEDIR=src
 
@@ -22,11 +22,12 @@ clean:
 
 compile: clean
 	for X in ${TARGETS}; do \
-	   cat ${BASEDIR}/$$X >> ${OUTPUT}; \
+	  cat ${BASEDIR}/$$X >> ${OUTPUT}; \
 	done
 
 install: compile
 	mkdir -p "${INSTALL_PATH}" && cp "${OUTPUT}" "${INSTALL_PATH}"
+	@echo "Installed in ${INSTALL_PATH}"
 
 test: clean
 	bats tests
