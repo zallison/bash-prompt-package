@@ -92,8 +92,6 @@ function bpp_git() {
     echo $GIT
 }
 
-BPP_OPTIONS[GIT_STAT_AHEAD]=0
-BPP_OPTIONS[GIT_STAT_STAGE]=0
 function bpp_git_status() {
     command -v git 2>&1 > /dev/null || return
     local branch flags color
@@ -126,9 +124,8 @@ function bpp_git_status() {
 
         if [[ $git_status =~ 'Your branch is ahead' ]]; then
             color=${BPP_COLOR[WARNING]}
-            [[ $BPP_OPTIONS[GIT_STAT_AHEAD] ]] ||
-                flags+=">"
-            [[ $BPP_OPTIONS[GIT_STAT_AHEAD] ]] &&
+            flags+=">"
+            [[ $BPP_OPTIONS[GIT_STAT_AHEAD] == "1" ]] &&
                 flags+="ahead:${BPP_COLOR[RESET]}($(bpp_git_shortstat HEAD~))"
         fi
 
