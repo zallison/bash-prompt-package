@@ -18,38 +18,40 @@ utf8_p() {
     clear_results=1 # Move to front of line, print spaces, move back to the
                     # front of the line.  Like we never did anything!
 
-    pause=0         # Time to pause to allows the result to be read (if using
+    pause=0         # Seconds to pause to allows the result to be read (if using
                     # clear_results)
 
     get_pos="\033[6n" # Term escape code to ask for position
-    result=0 #
+    result=0 # Assume ANSI.
 
-    # Print the test on a single line
-    echo -en "\nUnicode test: "
-    echo -en "€❱❰╔╚"  # Unicode test characters
+    old_settings=$(stty -g) # Save terminal settings
+    stty -icanon -echo min 0 time 3
+    ## icanon: enable special characters: erase, kill, werase, rprnt
+    ## -echo: echo input
+    ##
+    # Print the test on a single line, but not the top line
+    echo
+    echo -n "Unicode test: "
+    echo -n "€❱❰╔╚"  # Unicode test characters
+
     echo -en ${get_pos}  # ask the terminal for the position
-    echo -n " "
+    # response: ^[v;hR  - i.e cursor at row v, col h
 
-    read -t 2 -s -d\[ junk || return 1   # discard the first part of the response
-    read -t 2 -s -d R pos    # store the position in bash variable 'foo'
-    pos="${pos/*;}"
+    pos=$(dd count=1 2>/dev/null) # Read response
+    pos=${pos%%R*}                # Remove "Junk"
+    pos=${pos##*\[}               #
+    col=${pos##*;}                # Get the column number
+    row=${pos%%;*}                # Get the row number
+    stty "$old_settings" # Reset Term
 
-    result=0 # Assume ANSI
-    if [[ ${pos} == "20" ]]; then
-        # If we're as position 20 everything rendered correctly
-        result=1
-    elif [[ ${pos} == "30" ]]; then
-        # A term that doesn't support UTF8 comes in at 30.
-        :
+
+    if [[ ${col} == "20" ]]; then
+        result=1 # UTF8 Output successful
+        echo -n " ... UTF8"
+    elif [[ ${col} == "30" ]]; then
+        echo -n "  ... ANSI." : # Only uses ASCII
     else
-        # This "shouldn't happen"
-        echo Error: ${pos} >&2
-    fi
-
-    if [[ ${result} == 1 ]]; then
-        echo -n "... UTF8"
-    else
-        echo -n"   ... ANSI."
+        echo -n unknown: ${col} >&2 # Unexpected value
     fi
 
     # Maybe pause so results can be read

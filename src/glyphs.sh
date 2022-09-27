@@ -1,42 +1,47 @@
+#!/usr/bin/env bash
+
 # UTF Glyphs
 
 utf8_p() {
-    local junk pos result get_pos pause clear_results
+    local pos col result get_pos pause clear_results
     clear_results=1 # Move to front of line, print spaces, move back to the
                     # front of the line.  Like we never did anything!
 
-    pause=0         # Time to pause to allows the result to be read (if using
+    pause=0         # Seconds to pause to allows the result to be read (if using
                     # clear_results)
 
     get_pos="\033[6n" # Term escape code to ask for position
-    result=0 #
+    result=0 # Assume ANSI.
 
-    # Print the test on a single line
-    echo -en "\nUnicode test: "
-    echo -en "€❱❰╔╚"  # Unicode test characters
-    echo -en ${get_pos}  # ask the terminal for the position
-    echo -n " "
+    old_settings=$(stty -g) # Save terminal settings
+    stty -icanon -echo min 0 time 3
+    ## icanon: enable special characters: erase, kill, werase, rprnt
+    ## -echo: echo input
+    ##
 
-    read -t 2 -s -d\[ junk || return 1   # discard the first part of the response
-    read -t 2 -s -d R pos    # store the position in bash variable 'foo'
-    pos="${pos/*;}"
+    # Print the test on a single line, but not the top line
+    echo
+    echo -n "Unicode test: "
+    echo -n "€❱❰╔╚"  # Unicode test characters
+    echo -en "${get_pos}"  # ask the terminal for the position
 
-    result=0 # Assume ANSI
-    if [[ ${pos} == "20" ]]; then
-        # If we're as position 20 everything rendered correctly
-        result=1
-    elif [[ ${pos} == "30" ]]; then
-        # A term that doesn't support UTF8 comes in at 30.
-        :
+    # response: ^[v;hR  - i.e cursor at row v, col h
+
+    pos=$(dd count=1 2>/dev/null) # Read response
+    pos=${pos%%R*}                # Remove "Junk"
+    pos=${pos##*\[}               #
+    col=${pos##*;}                # Get the column number
+    #row=${pos%%;*}                # Get the row number
+    stty "$old_settings" # Reset Term
+
+
+    if [[ ${col} == "20" ]]; then
+        result=1 # UTF8 Output successful
+        echo -n " ... UTF8"
+    elif [[ ${col} == "30" ]]; then
+        echo -n "  ... ANSI." : # Only uses ASCII
     else
-        # This "shouldn't happen"
-        echo Error: ${pos} >&2
-    fi
-
-    if [[ ${result} == 1 ]]; then
-        echo -n "... UTF8"
-    else
-        echo -n"   ... ANSI."
+        echo -n "unknown: ${col}" >&2 # Unexpected value
     fi
 
     # Maybe pause so results can be read
@@ -48,19 +53,25 @@ utf8_p() {
     return ${result}
 }
 
-utf8_p
-utf8_status=$?
+if [[ ! "${UTF8_STATUS}" ]]; then
+    declare -a status_map
+    status_map[0]=FAILED
+    status_map[1]=ENABLED
+
+    utf8_p
+    declare -x UTF8_STATUS=${status_map[$?]}
+fi
 
 function _bpp_change_glyphs {
-    if [[ "${BPP_OPTIONS[GLYPH]}" = "utf" && ${utf8_status} == "1"  ]]; then
+    if [[ "${BPP_OPTIONS[GLYPH]}" = "utf" && ${UTF8_STATUS} == "ENABLED"  ]]; then
         BPP_GLYPHS[BOTTOM]="╚"
         BPP_GLYPHS[CLOSE]="❱"
         BPP_GLYPHS[DOWNARROW]="↓"
-        BPP_GLYPHS[FILE]="🖺"
-        BPP_GLYPHS[FOLDER]="📁"
-        BPP_GLYPHS[MAIL]="📧"
+        BPP_GLYPHS[FILE]="💾"
+        BPP_GLYPHS[FOLDER]="📂"
+        BPP_GLYPHS[MAIL]="📬"
         BPP_GLYPHS[MIDDLE]="║"
-        BPP_GLYPHS[NBS]=" "
+        BPP_GLYPHS[NBS]=" " # Non-breaking space
         BPP_GLYPHS[NEWLINE]=$'\n'
         BPP_GLYPHS[OPEN]="❰"
         BPP_GLYPHS[TOP]="╔"
@@ -68,15 +79,17 @@ function _bpp_change_glyphs {
     else
         BPP_GLYPHS[BOTTOM]=""
         BPP_GLYPHS[CLOSE]=")"
-        BPP_GLYPHS[DOWNARROW]="D"
-        BPP_GLYPHS[FILE]="F"
-        BPP_GLYPHS[FOLDER]=""
-        BPP_GLYPHS[MAIL]="M"
+        BPP_GLYPHS[DOWNARROW]="↓"
+        BPP_GLYPHS[FILE]="f"
+        BPP_GLYPHS[FOLDER]="F"
+        BPP_GLYPHS[MAIL]="Mail"
         BPP_GLYPHS[MIDDLE]=""
-        BPP_GLYPHS[NBS]=" "
+        BPP_GLYPHS[NBS]=" " # Non-breaking space
         BPP_GLYPHS[NEWLINE]=$'\n'
         BPP_GLYPHS[OPEN]="("
         BPP_GLYPHS[TOP]=""
         BPP_GLYPHS[ZAP]="Z"
     fi
+
+    export BPP_GLYPHS;
 }
