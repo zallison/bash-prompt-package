@@ -63,19 +63,25 @@ utf8_p() {
     return ${result}
 }
 
-utf8_p
-utf8_status=$?
+if [[ ! "${UTF8_STATUS}" ]]; then
+    declare -a status_map
+    status_map[0]=FAILED
+    status_map[1]=ENABLED
+
+    utf8_p
+    declare -x UTF8_STATUS=${status_map[$?]}
+fi
 
 function _bpp_change_glyphs {
-    if [[ "${BPP_OPTIONS[GLYPH]}" = "utf" && ${utf8_status} == "1"  ]]; then
+    if [[ "${BPP_OPTIONS[GLYPH]}" = "utf" && ${UTF8_STATUS} == "ENABLED"  ]]; then
         BPP_GLYPHS[BOTTOM]="╚"
         BPP_GLYPHS[CLOSE]="❱"
         BPP_GLYPHS[DOWNARROW]="↓"
-        BPP_GLYPHS[FILE]="🖺"
-        BPP_GLYPHS[FOLDER]="📁"
-        BPP_GLYPHS[MAIL]="📧"
+        BPP_GLYPHS[FILE]="💾"
+        BPP_GLYPHS[FOLDER]="📂"
+        BPP_GLYPHS[MAIL]="📬"
         BPP_GLYPHS[MIDDLE]="║"
-        BPP_GLYPHS[NBS]=" "
+        BPP_GLYPHS[NBS]=" " # Non-breaking space
         BPP_GLYPHS[NEWLINE]=$'\n'
         BPP_GLYPHS[OPEN]="❰"
         BPP_GLYPHS[TOP]="╔"
@@ -83,12 +89,12 @@ function _bpp_change_glyphs {
     else
         BPP_GLYPHS[BOTTOM]=""
         BPP_GLYPHS[CLOSE]=")"
-        BPP_GLYPHS[DOWNARROW]="D"
-        BPP_GLYPHS[FILE]="F"
-        BPP_GLYPHS[FOLDER]=""
-        BPP_GLYPHS[MAIL]="M"
+        BPP_GLYPHS[DOWNARROW]="↓"
+        BPP_GLYPHS[FILE]="f"
+        BPP_GLYPHS[FOLDER]="F"
+        BPP_GLYPHS[MAIL]="Mail"
         BPP_GLYPHS[MIDDLE]=""
-        BPP_GLYPHS[NBS]=" "
+        BPP_GLYPHS[NBS]=" " # Non-breaking space
         BPP_GLYPHS[NEWLINE]=$'\n'
         BPP_GLYPHS[OPEN]="("
         BPP_GLYPHS[TOP]=""
