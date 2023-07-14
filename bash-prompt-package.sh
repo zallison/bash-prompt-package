@@ -11,10 +11,12 @@ declare -A BPP_GLYPHS
 declare -A BPP_COLOR
 declare -A BPP_BGCOLOR
 declare -A BPP_TEXT
+#!/usr/bin/env bash
+
 # UTF Glyphs
 
 utf8_p() {
-    local junk pos result get_pos pause clear_results
+    local pos col result get_pos pause clear_results
     clear_results=1 # Move to front of line, print spaces, move back to the
                     # front of the line.  Like we never did anything!
 
@@ -29,19 +31,20 @@ utf8_p() {
     ## icanon: enable special characters: erase, kill, werase, rprnt
     ## -echo: echo input
     ##
+
     # Print the test on a single line, but not the top line
     echo
     echo -n "Unicode test: "
     echo -n "€❱❰╔╚"  # Unicode test characters
+    echo -en "${get_pos}"  # ask the terminal for the position
 
-    echo -en ${get_pos}  # ask the terminal for the position
     # response: ^[v;hR  - i.e cursor at row v, col h
 
     pos=$(dd count=1 2>/dev/null) # Read response
     pos=${pos%%R*}                # Remove "Junk"
     pos=${pos##*\[}               #
     col=${pos##*;}                # Get the column number
-    row=${pos%%;*}                # Get the row number
+    #row=${pos%%;*}                # Get the row number
     stty "$old_settings" # Reset Term
 
 
@@ -51,7 +54,7 @@ utf8_p() {
     elif [[ ${col} == "30" ]]; then
         echo -n "  ... ANSI." : # Only uses ASCII
     else
-        echo -n unknown: ${col} >&2 # Unexpected value
+        echo -n "unknown: ${col}" >&2 # Unexpected value
     fi
 
     # Maybe pause so results can be read
@@ -100,12 +103,19 @@ function _bpp_change_glyphs {
         BPP_GLYPHS[TOP]=""
         BPP_GLYPHS[ZAP]="Z"
     fi
+
+    export BPP_GLYPHS;
 }
+#!/usr/bin/env bash
+
 # Colors
-function bpp_ps1_escape { echo "\[$*\]"; }
-function bpp_mk_prompt_color { bpp_ps1_escape "$(bpp_mk_color $1)"; }
+function bpp_ps1_escape {
+    echo "\[$*\]";
+}
+
+function bpp_mk_prompt_color { bpp_ps1_escape "$(bpp_mk_color \\"$1\\")"; }
 function bpp_mk_color { echo "\033[38;5;${1}m"; }
-function bpp_mk_prompt_bgcolor { bpp_ps1_escape "$(bpp_mk_bgcolor $1)"; }
+function bpp_mk_prompt_bgcolor { bpp_ps1_escape "$(bpp_mk_bgcolor \\"$1\\")"; }
 function bpp_mk_bgcolor { echo "\033[48;5;${1}m"; }
 
 # Reset
@@ -119,7 +129,7 @@ BPP_COLOR[UNDERLINED]="\[\033[4m\]"
 BPP_COLOR[BLINK]="\[\033[7m\]"
 BPP_COLOR[INVERT]="\[\033[8m\]"
 
-export BPP_COLOR BPP_BGCOLOR
+export BPP_COLOR BPP_BGCOLOR bpp_ps1_escape
 ## Named Colors for 0-15
 # Foreground
 BPP_COLOR[BLACK]=$(bpp_mk_prompt_color 0)
