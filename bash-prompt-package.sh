@@ -76,6 +76,7 @@ fi
 function _bpp_change_glyphs {
     if [[ "${BPP_OPTIONS[GLYPH]}" = "utf" && ${UTF8_STATUS} == "ENABLED"  ]]; then
         BPP_GLYPHS[BOTTOM]="╚"
+        BPP_GLYPHS[OPEN]="❰"
         BPP_GLYPHS[CLOSE]="❱"
         BPP_GLYPHS[DOWNARROW]="↓"
         BPP_GLYPHS[FILE]="💾"
@@ -84,7 +85,6 @@ function _bpp_change_glyphs {
         BPP_GLYPHS[MIDDLE]="║"
         BPP_GLYPHS[NBS]=" " # Non-breaking space
         BPP_GLYPHS[NEWLINE]=$'\n'
-        BPP_GLYPHS[OPEN]="❰"
         BPP_GLYPHS[TOP]="╔"
         BPP_GLYPHS[ZAP]="⚡"
     else
