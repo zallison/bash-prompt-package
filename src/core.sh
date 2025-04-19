@@ -39,11 +39,12 @@ complete -F _bpp_options bpp-options
 
 # Commands:
 #   CMD - run command and append result to PS1, with decoration
+#   CMDRAW - Ran a command and insert result without decoration
 #   CMDNL - run command and append result to PS1, with decoration, appends a newline
-#   EXE - Execute command, but do not add to PS1
 #   STR - Insert a string as is, without decoration
 #   STRDEC - Insert a string with decoration
-#   CMDRAW - Ran a command and insert result without decoration
+#   EXE - Execute command, but do not add to PS1
+
 
 function bpp_exec_module {
     INDEX=$1
