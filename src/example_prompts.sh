@@ -6,7 +6,7 @@ function bpp-simple-prompt {
 
 function bpp-compact-prompt {
     BPP_DATA[DECORATOR]=bpp_decorate
-    BPP_ENABLED[VCS_REMOTE]=0
+    BPP_OPTIONS[VCS_REMOTE]=0
     export BPP=("EXE bpp_set_title"
                 "EXE bpp_history"
                 "CMD bpp_vcs"
