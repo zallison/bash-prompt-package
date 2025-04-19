@@ -7,16 +7,12 @@
 #######################
 # Variables
 declare -A BPP_OPTIONS
-declare -A BPP_ENABLED
 declare -A BPP_DATA
 declare -A BPP_GLYPHS
 declare -A BPP_COLOR
 declare -A BPP_BGCOLOR
 declare -A BPP_TEXT
-#!/usr/bin/env bash
-
 # UTF Glyphs
-
 utf8_p() {
     local pos col result get_pos pause clear_results
     clear_results=1 # Move to front of line, print spaces, move back to the
