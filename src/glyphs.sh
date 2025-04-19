@@ -1,7 +1,4 @@
-#!/usr/bin/env bash
-
 # UTF Glyphs
-
 utf8_p() {
     local pos col result get_pos pause clear_results
     clear_results=1 # Move to front of line, print spaces, move back to the
