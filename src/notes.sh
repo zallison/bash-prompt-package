@@ -9,7 +9,7 @@ fi
 function bpp_note {
     local PWD
     PWD=$(pwd)
-    if [[ "$BPP_ENABLED[NOTE]" == 0 ]]; then
+    if [[ "$BPP_OPTIONS[NOTE]" == 0 ]]; then
         return
     fi
 
