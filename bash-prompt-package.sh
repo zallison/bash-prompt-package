@@ -179,20 +179,20 @@ fi
 # BPP Environment Options
 
 # These can be turned off at runtime to disable a running module
-BPP_ENABLED[ACPI]=1
-BPP_ENABLED[DATE]=1
-BPP_ENABLED[DIRINFO]=1
-BPP_ENABLED[EMACS]=1
-BPP_ENABLED[ERROR]=1
-BPP_ENABLED[NOTES]=1
-BPP_ENABLED[SET_TITLE]=1
-BPP_ENABLED[TEMP]=1
-BPP_ENABLED[UPTIME]=1
-BPP_ENABLED[USER]=1
-BPP_ENABLED[VCS]=1
-BPP_ENABLED[VCS_REMOTE]=0
-BPP_ENABLED[VCS_TYPE]=0
-BPP_ENABLED[VENV]=1
+BPP_OPTIONS[ACPI]=1
+BPP_OPTIONS[DATE]=1
+BPP_OPTIONS[DIRINFO]=1
+BPP_OPTIONS[EMACS]=1
+BPP_OPTIONS[ERROR]=1
+BPP_OPTIONS[NOTES]=1
+BPP_OPTIONS[SET_TITLE]=1
+BPP_OPTIONS[TEMP]=1
+BPP_OPTIONS[UPTIME]=1
+BPP_OPTIONS[USER]=1
+BPP_OPTIONS[VCS]=1
+BPP_OPTIONS[VCS_REMOTE]=0
+BPP_OPTIONS[VCS_TYPE]=0
+BPP_OPTIONS[VENV]=1
 
 BPP_OPTIONS[ACPI_HIDE_ABOVE]=65
 BPP_OPTIONS[DATE_FORMAT]="%I:%M"
@@ -236,8 +236,6 @@ function bpp_prompt_command {
 }
 export PROMPT_COMMAND=bpp_prompt_command
 
-function bpp-disable { BPP_ENABLED[$1]=0; }
-function bpp-enable  { BPP_ENABLED[$1]=1; }
 function bpp-options {
     if [[ $2 ]]; then
         BPP_OPTIONS[$1]=$2;
@@ -257,37 +255,16 @@ function _bpp_options {
     return 0
 }
 
-function _bpp_enable {
-    KEYS=$(for i in "${!BPP_ENABLED[@]}"; do
-               if [ ${BPP_ENABLED[$i]} == 0 ]; then
-                   echo "$i";
-               fi
-           done)
-    mapfile -t COMPREPLY < <(compgen -W "$KEYS" "$2")
-    return 0
-}
-
-function _bpp_disable {
-    KEYS=$(for i in "${!BPP_ENABLED[@]}"; do
-               if [ ${BPP_ENABLED[$i]} == 1 ]; then
-                   echo "$i";
-               fi
-           done)
-    mapfile -t COMPREPLY < <(compgen -W "$KEYS" "$2")
-    return 0
-}
-
-complete -F _bpp_enable bpp-enable
-complete -F _bpp_disable bpp-disable
 complete -F _bpp_options bpp-options
 
 # Commands:
 #   CMD - run command and append result to PS1, with decoration
+#   CMDRAW - Ran a command and insert result without decoration
 #   CMDNL - run command and append result to PS1, with decoration, appends a newline
-#   EXE - Execute command, but do not add to PS1
 #   STR - Insert a string as is, without decoration
 #   STRDEC - Insert a string with decoration
-#   CMDRAW - Ran a command and insert result without decoration
+#   EXE - Execute command, but do not add to PS1
+
 
 function bpp_exec_module {
     INDEX=$1
@@ -330,7 +307,7 @@ function bpp_decorate {
 ### End Decorators
 ### Standard Modules
 function bpp_date {
-    if [[ ${BPP_ENABLED[DATE]} == 1 ]]; then
+    if [[ ${BPP_OPTIONS[DATE]} == 1 ]]; then
         DATE="${BPP_COLOR[INFO]}$(date +${BPP_OPTIONS[DATE_FORMAT]})"
     else
         DATE=""
@@ -342,7 +319,7 @@ function bpp_uptime {
     local cores
     cores=$(nproc --all)
     UPTIME=""
-    if [[ ${BPP_ENABLED[UPTIME]} == 1 ]]; then
+    if [[ ${BPP_OPTIONS[UPTIME]} == 1 ]]; then
         local relative_load ignore warn
         warn=.7
         display=.5
@@ -385,7 +362,7 @@ function bpp_uptime {
 }
 
 function bpp_user_and_host {
-    [[ BPP_ENABLED[USER] ]] || return
+    [[ BPP_OPTIONS[USER] ]] || return
 
     if [ -z "$SSH_CONNECTION" ]; then
         # Local
@@ -451,7 +428,7 @@ BPP_ERRORS[136]="Fatal error signal 8"
 BPP_ERRORS[137]="Fatal error signal 9"
 BPP_ERRORS[255]="EXIT_OUT_LIMITS Exit status out of range(0..255)"
 function bpp_error {
-    [[ BPP_ENABLED[ERROR] == 0 ]] || return
+    [[ BPP_OPTIONS[ERROR] == 0 ]] || return
     [[ BPP_DATA[EXIT_STATUS] ]] || return
 
     local ERR=${BPP_DATA[EXIT_STATUS]}
@@ -469,7 +446,7 @@ function bpp_error {
 }
 
 function bpp_dirinfo {
-    [[ ${BPP_ENABLED[DIRINFO]} == 1 ]] || return
+    [[ ${BPP_OPTIONS[DIRINFO]} == 1 ]] || return
 
     FILES="$(/bin/ls -F | grep -cv /$)${BPP_COLOR[GOOD]}${BPP_GLYPHS[FILE]}${BPP_COLOR[RESET]}"
     DIRSIZE="$(/bin/ls -lah | /bin/grep -m 1 total | /bin/sed 's/total //')"
@@ -480,7 +457,7 @@ function bpp_dirinfo {
 }
 
 function bpp_set_title() {
-    [[ BPP_ENABLED[SET_TITLE] == 1 ]] || return
+    [[ BPP_OPTIONS[SET_TITLE] == 1 ]] || return
 
     function set_title {
         if [[ ! -z $TMUX && -z $SSH ]]; then
@@ -506,7 +483,7 @@ function bpp_set_title() {
 }
 
 function bpp_emacs_ansiterm_path_info() {
-    [[ BPP_ENABLED[EMACS] == 1 ]] || return
+    [[ BPP_OPTIONS[EMACS] == 1 ]] || return
 
     local ssh_hostname
 
@@ -535,7 +512,7 @@ function bpp_emacs_ansiterm_path_info() {
 
 
 function bpp_emacs_vterm_path_info() {
-    [[ BPP_ENABLED[EMACS] == 1 ]] || return
+    [[ BPP_OPTIONS[EMACS] == 1 ]] || return
 
     local ssh_hostname
 
@@ -567,7 +544,7 @@ function bpp_emacs_vterm_path_info() {
 }
 
 function bpp_acpi {
-    [[ ${BPP_ENABLED[ACPI]} == 1 ]] || return
+    [[ ${BPP_OPTIONS[ACPI]} == 1 ]] || return
     local ACPI BATTERY_LEVEL CHARGE_STATUS CHARGE_ICON BATTERY_DISP BLOCK
     ACPI=$(acpi 2>/dev/null | head -1 | awk '{print $3 $4}' | tr ,% \ \ )
     BATTERY_LEVEL=${ACPI#* }
@@ -577,7 +554,7 @@ function bpp_acpi {
         return
     fi
     if [ -z $BATTERY_LEVEL ]; then
-        BPP_ENABLED[ACPI]=0
+        BPP_OPTIONS[ACPI]=0
         return
     fi
     CHARGE_ICON=""
@@ -640,7 +617,7 @@ function bpp_get_block_height {
 }
 
 function bpp_cpu_temp {
-    [[ ${BPP_ENABLED[TEMP]} == 1 ]] || return
+    [[ ${BPP_OPTIONS[TEMP]} == 1 ]] || return
     local TEMP
 
     BPP_OPTIONS[TEMP_CRIT]=${BPP_OPTIONS[TEMP_CRIT]:-65}
@@ -649,7 +626,7 @@ function bpp_cpu_temp {
     if [[ -f /sys/class/thermal/thermal_zone0/temp ]]; then
         TEMP=$(echo $(cat /sys/class/thermal/thermal_zone*/temp 2>/dev/null | sort -rn | head -1) 1000 / p | dc)
     else
-        BPP_ENABLED[TEMP]=0 # Disable the module
+        BPP_OPTIONS[TEMP]=0 # Disable the module
         return
     fi
 
@@ -715,7 +692,7 @@ function bpp-simple-prompt {
 
 function bpp-compact-prompt {
     BPP_DATA[DECORATOR]=bpp_decorate
-    BPP_ENABLED[VCS_REMOTE]=0
+    BPP_OPTIONS[VCS_REMOTE]=0
     export BPP=("EXE bpp_set_title"
                 "EXE bpp_history"
                 "CMD bpp_vcs"
@@ -788,7 +765,7 @@ function bpp_venv {
         fi
     done
 
-    if [[ ${BPP_ENABLED[VENV]} == 1 ]]; then
+    if [[ ${BPP_OPTIONS[VENV]} == 1 ]]; then
         current=$(readlink -f .)
         if [[ $VIRTUAL_ENV ]]; then
             here=$(basename $current)
@@ -875,7 +852,7 @@ function bpp_vcs {
     fi
 
     if [[ $VCS ]]; then
-        if [[ ${BPP_ENABLED[VCS_TYPE]} == 1 ]]; then
+        if [[ ${BPP_OPTIONS[VCS_TYPE]} == 1 ]]; then
             VCS="${VCS_TYPE} ${VCS}"
         else
             VCS="${VCS}"
@@ -902,7 +879,7 @@ function bpp_svn {
 }
 
 function bpp_git_shortstat() {
-    [[ ${BPP_ENABLED[VCS]} ]] || return 0
+    [[ ${BPP_OPTIONS[VCS]} ]] || return 0
     BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
     [[ "$BRANCH" ]] || return 0
 
@@ -934,7 +911,7 @@ function bpp_git_shortstat() {
 }
 
 function bpp_git() {
-    [[ ${BPP_ENABLED[VCS]} == "1" ]] || return
+    [[ ${BPP_OPTIONS[VCS]} == "1" ]] || return
 
     GIT="";
     STATUS=$(bpp_git_status)
@@ -944,7 +921,7 @@ function bpp_git() {
         STATUS="${STATUS}${DETAILS}";
     fi
 
-    if [[ ${BPP_ENABLED[VCS_REMOTE]} == "1" ]]; then
+    if [[ ${BPP_OPTIONS[VCS_REMOTE]} == "1" ]]; then
         REMOTE=$(git remote -v | head -n1 | awk '{print $2}' | sed 's/.*\///' | sed 's/\.git//')
         if [[ ! $REMOTE ]]; then
             REMOTE=local
@@ -1060,7 +1037,7 @@ fi
 function bpp_note {
     local PWD
     PWD=$(pwd)
-    if [[ "$BPP_ENABLED[NOTE]" == 0 ]]; then
+    if [[ "$BPP_OPTIONS[NOTE]" == 0 ]]; then
         return
     fi
 
