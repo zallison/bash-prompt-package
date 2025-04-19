@@ -10,7 +10,7 @@ function bpp_vcs {
     fi
 
     if [[ $VCS ]]; then
-        if [[ ${BPP_ENABLED[VCS_TYPE]} == 1 ]]; then
+        if [[ ${BPP_OPTIONS[VCS_TYPE]} == 1 ]]; then
             VCS="${VCS_TYPE} ${VCS}"
         else
             VCS="${VCS}"
@@ -37,7 +37,7 @@ function bpp_svn {
 }
 
 function bpp_git_shortstat() {
-    [[ ${BPP_ENABLED[VCS]} ]] || return 0
+    [[ ${BPP_OPTIONS[VCS]} ]] || return 0
     BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
     [[ "$BRANCH" ]] || return 0
 
@@ -69,7 +69,7 @@ function bpp_git_shortstat() {
 }
 
 function bpp_git() {
-    [[ ${BPP_ENABLED[VCS]} == "1" ]] || return
+    [[ ${BPP_OPTIONS[VCS]} == "1" ]] || return
 
     GIT="";
     STATUS=$(bpp_git_status)
@@ -79,7 +79,7 @@ function bpp_git() {
         STATUS="${STATUS}${DETAILS}";
     fi
 
-    if [[ ${BPP_ENABLED[VCS_REMOTE]} == "1" ]]; then
+    if [[ ${BPP_OPTIONS[VCS_REMOTE]} == "1" ]]; then
         REMOTE=$(git remote -v | head -n1 | awk '{print $2}' | sed 's/.*\///' | sed 's/\.git//')
         if [[ ! $REMOTE ]]; then
             REMOTE=local

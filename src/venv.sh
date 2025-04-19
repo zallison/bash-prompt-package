@@ -10,7 +10,7 @@ function bpp_venv {
         fi
     done
 
-    if [[ ${BPP_ENABLED[VENV]} == 1 ]]; then
+    if [[ ${BPP_OPTIONS[VENV]} == 1 ]]; then
         current=$(readlink -f .)
         if [[ $VIRTUAL_ENV ]]; then
             here=$(basename $current)
