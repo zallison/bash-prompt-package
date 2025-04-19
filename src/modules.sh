@@ -1,6 +1,6 @@
 ### Standard Modules
 function bpp_date {
-    if [[ ${BPP_ENABLED[DATE]} == 1 ]]; then
+    if [[ ${BPP_OPTIONS[DATE]} == 1 ]]; then
         DATE="${BPP_COLOR[INFO]}$(date +${BPP_OPTIONS[DATE_FORMAT]})"
     else
         DATE=""
@@ -12,7 +12,7 @@ function bpp_uptime {
     local cores
     cores=$(nproc --all)
     UPTIME=""
-    if [[ ${BPP_ENABLED[UPTIME]} == 1 ]]; then
+    if [[ ${BPP_OPTIONS[UPTIME]} == 1 ]]; then
         local relative_load ignore warn
         warn=.7
         display=.5
@@ -55,7 +55,7 @@ function bpp_uptime {
 }
 
 function bpp_user_and_host {
-    [[ BPP_ENABLED[USER] ]] || return
+    [[ BPP_OPTIONS[USER] ]] || return
 
     if [ -z "$SSH_CONNECTION" ]; then
         # Local
@@ -121,7 +121,7 @@ BPP_ERRORS[136]="Fatal error signal 8"
 BPP_ERRORS[137]="Fatal error signal 9"
 BPP_ERRORS[255]="EXIT_OUT_LIMITS Exit status out of range(0..255)"
 function bpp_error {
-    [[ BPP_ENABLED[ERROR] == 0 ]] || return
+    [[ BPP_OPTIONS[ERROR] == 0 ]] || return
     [[ BPP_DATA[EXIT_STATUS] ]] || return
 
     local ERR=${BPP_DATA[EXIT_STATUS]}
@@ -139,7 +139,7 @@ function bpp_error {
 }
 
 function bpp_dirinfo {
-    [[ ${BPP_ENABLED[DIRINFO]} == 1 ]] || return
+    [[ ${BPP_OPTIONS[DIRINFO]} == 1 ]] || return
 
     FILES="$(/bin/ls -F | grep -cv /$)${BPP_COLOR[GOOD]}${BPP_GLYPHS[FILE]}${BPP_COLOR[RESET]}"
     DIRSIZE="$(/bin/ls -lah | /bin/grep -m 1 total | /bin/sed 's/total //')"
@@ -150,7 +150,7 @@ function bpp_dirinfo {
 }
 
 function bpp_set_title() {
-    [[ BPP_ENABLED[SET_TITLE] == 1 ]] || return
+    [[ BPP_OPTIONS[SET_TITLE] == 1 ]] || return
 
     function set_title {
         if [[ ! -z $TMUX && -z $SSH ]]; then
@@ -176,7 +176,7 @@ function bpp_set_title() {
 }
 
 function bpp_emacs_ansiterm_path_info() {
-    [[ BPP_ENABLED[EMACS] == 1 ]] || return
+    [[ BPP_OPTIONS[EMACS] == 1 ]] || return
 
     local ssh_hostname
 
@@ -205,7 +205,7 @@ function bpp_emacs_ansiterm_path_info() {
 
 
 function bpp_emacs_vterm_path_info() {
-    [[ BPP_ENABLED[EMACS] == 1 ]] || return
+    [[ BPP_OPTIONS[EMACS] == 1 ]] || return
 
     local ssh_hostname
 
@@ -237,7 +237,7 @@ function bpp_emacs_vterm_path_info() {
 }
 
 function bpp_acpi {
-    [[ ${BPP_ENABLED[ACPI]} == 1 ]] || return
+    [[ ${BPP_OPTIONS[ACPI]} == 1 ]] || return
     local ACPI BATTERY_LEVEL CHARGE_STATUS CHARGE_ICON BATTERY_DISP BLOCK
     ACPI=$(acpi 2>/dev/null | head -1 | awk '{print $3 $4}' | tr ,% \ \ )
     BATTERY_LEVEL=${ACPI#* }
@@ -247,7 +247,7 @@ function bpp_acpi {
         return
     fi
     if [ -z $BATTERY_LEVEL ]; then
-        BPP_ENABLED[ACPI]=0
+        BPP_OPTIONS[ACPI]=0
         return
     fi
     CHARGE_ICON=""
@@ -310,7 +310,7 @@ function bpp_get_block_height {
 }
 
 function bpp_cpu_temp {
-    [[ ${BPP_ENABLED[TEMP]} == 1 ]] || return
+    [[ ${BPP_OPTIONS[TEMP]} == 1 ]] || return
     local TEMP
 
     BPP_OPTIONS[TEMP_CRIT]=${BPP_OPTIONS[TEMP_CRIT]:-65}
@@ -319,7 +319,7 @@ function bpp_cpu_temp {
     if [[ -f /sys/class/thermal/thermal_zone0/temp ]]; then
         TEMP=$(echo $(cat /sys/class/thermal/thermal_zone*/temp 2>/dev/null | sort -rn | head -1) 1000 / p | dc)
     else
-        BPP_ENABLED[TEMP]=0 # Disable the module
+        BPP_OPTIONS[TEMP]=0 # Disable the module
         return
     fi
 
