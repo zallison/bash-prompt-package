@@ -1,14 +1,12 @@
 ### Standard Modules
-function bpp_date {
-    if [[ ${BPP_OPTIONS[DATE]} == 1 ]]; then
-        DATE="${BPP_COLOR[INFO]}$(date +${BPP_OPTIONS[DATE_FORMAT]})"
-    else
-        DATE=""
-    fi
+bpp_date() {
+    [[ ${BPP_OPTIONS[DATE]} == 1 ]] || return
+
+    DATE="${BPP_COLOR[INFO]}$(date +${BPP_OPTIONS[DATE_FORMAT]})"
     echo $DATE
 }
 
-function bpp_uptime {
+bpp_uptime() {
     local cores
     cores=$(nproc --all)
     UPTIME=""
@@ -20,7 +18,7 @@ function bpp_uptime {
         BPP_OPTIONS[UPTIME_SEPERATOR]=${BPP_OPTIONS[UPTIME_SEPERATOR]:=}
         BPP_OPTIONS[UPTIME_BLOCK]=${BPP_OPTIONS[UPTIME_BLOCK]:=1}
 
-        function colorize_load {
+        colorize_load() {
             local load color
             load=$1
             color=${BPP_COLOR[GOOD]}

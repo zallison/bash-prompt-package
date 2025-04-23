@@ -1,5 +1,5 @@
 ### Core System
-function bpp_prompt_command {
+bpp_prompt_command() {
     BPP_DATA[EXIT_STATUS]=$?
     PS1="${BPP_COLOR[RESET]}"
     max=${#BPP[*]}
@@ -16,7 +16,7 @@ function bpp_prompt_command {
 }
 export PROMPT_COMMAND=bpp_prompt_command
 
-function bpp-options {
+bpp-options() {
     if [[ $2 ]]; then
         BPP_OPTIONS[$1]=$2;
         case $1 in
@@ -27,7 +27,7 @@ function bpp-options {
     fi
 }
 
-function _bpp_options {
+_bpp_options() {
     KEYS=$(for i in "${!BPP_OPTIONS[@]}"; do
                echo $i;
            done)
@@ -46,7 +46,7 @@ complete -F _bpp_options bpp-options
 #   EXE - Execute command, but do not add to PS1
 
 
-function bpp_exec_module {
+bpp_exec_module() {
     INDEX=$1
     CMD=$2
     shift;shift
@@ -79,7 +79,7 @@ function bpp_exec_module {
 ### End Core System
 
 ### Decorators
-function bpp_decorate {
+bpp_decorate() {
     if [ -z "$*" ]; then return;fi
     echo "${BPP_COLOR[DECORATION]}${BPP_GLYPHS[OPEN]}${BPP_COLOR[RESET]}$*${BPP_COLOR[DECORATION]}${BPP_GLYPHS[CLOSE]}${BPP_COLOR[RESET]}"
 }

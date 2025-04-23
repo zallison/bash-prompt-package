@@ -1,4 +1,4 @@
-function bpp_venv {
+bpp_venv() {
     local envpath
     env_path=''
     env_prefix=''
@@ -29,7 +29,7 @@ function bpp_venv {
     echo $VENV
 }
 
-function bpp-venv {
+bpp-venv() {
     local ENVPATH
     for P in ${BPP_OPTIONS[VENV_PATHS]}; do
         if [[ -f "./${P}/bin/activate" ]]; then
@@ -38,7 +38,7 @@ function bpp-venv {
         fi
     done
 
-    function load_env {
+    load_env() {
         if [[ $ENVPATH ]]; then
             source $ENVPATH;
             export VIRTUAL_ENV=$(readlink -f .)
@@ -48,7 +48,7 @@ function bpp-venv {
         fi
     }
 
-    function unload_env {
+    unload_env() {
         if [[ $VIRTUAL_ENV ]]; then
             unset VIRTUAL_ENV
             deactivate
@@ -58,7 +58,7 @@ function bpp-venv {
         fi
     }
 
-    function goto_env {
+    goto_env() {
         if [[ $VIRTUAL_ENV ]]; then
             cd $VIRTUAL_ENV || exit
             echo "Returned to virtual environment"
@@ -80,7 +80,8 @@ function bpp-venv {
         *) _bpp-venv; echo "Unknown action $1, try:${BOLD} ${COMPREPLY[*]} ${RESET}";;
     esac
 }
-function _bpp-venv {
+
+_bpp-venv() {
     COMPREPLY=( $(compgen -W 'activate cd deactivate disable go load return unload' -- $2))
     return 0
 }

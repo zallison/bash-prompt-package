@@ -1,6 +1,6 @@
 ### Tools
 
-function bpp-show-colors {
+_bpp_show_colors () {
     local ROWS=${1:-4}
     ## Show the 256 (we hope) colors available.
     for x in $(seq 0 255); do
@@ -13,11 +13,11 @@ function bpp-show-colors {
     done
 }
 
-function bpp-show-prompt {
+_bpp_show_prompt() {
     local j
     j=0
     for line in "${BPP[@]}"; do
         echo $j: $line
         j=$[ $j + 1 ];
-    done | sed 's/\\\[[^]]*\]/[FMT]/g'
+    done | sed 's/\\\[[^]]*\]/[FMT]/g';
 }
