@@ -27,6 +27,20 @@ way, and extends the built in functionality with a suite of extra
 tools to make sure that you can quickly build a working customized
 prompt showing you the information you need to be more productive.
 
+# Update: 2025-04-03
+
+I've begun work on making the porhect shellcheck happy.  Except for
+turning off some of the "this isn't posix!" "errors".  This is *bash*
+prompt package, we'll use as much bash as we want!
+
+Some upcoming changes might be breaking, depending on how far into the script your reach.
+
+**BPP_ENABLED has been merged into BPP_OPTIONS.**
+
+TODO: Better `bpp-options` experiences
+TODO: Theme change examples
+
+
 ---
 
 Try out some prompt, just download `bash-prompt-package.sh` and load it with `source`.
@@ -106,13 +120,17 @@ Changing colors is easy too:
 
     BPP_COLOR[GOOD]=${BPP_COLOR[PURPLE]}
     BPP_COLOR[WARNING]=${BPP_BGCOLOR[BRIGHTRED]}${BPP_COLOR[BLACK]}
-    BPP_COLOR[CRIT]=${BPP_BGCOLOR[BRIGHTRED]}${BPP_COLOR[WHITE]}
+    BPP_COLOR[CRITICAL]=${BPP_BGCOLOR[BRIGHTRED]}${BPP_COLOR[WHITE]}
+    BPP_COLOR[DECORATIONS=${BPP_COLOR[BRIGHTPURPLE]}
+    BPP_COLOR[INFO]=${BPP_COLOR[122]}
 
 ![new color prompt](./examples/prompt6.png)
 
 256 colors to choose from!  Which 256 is up to your terminal emulator.  See which are available using `bpp-show-colors`
 
 ![colors](./examples/show-colors.png)
+
+You can change the theme or prompt whenever you want and it takes effect on the next prompt.  Make your prompt work for you!
 
 ---
 
@@ -211,27 +229,28 @@ Example:
         fi
     }
 
-<<<<<<< HEAD
-or declare it in a STR:
+- or declare it in a STR:
 
     "STR $(ls -l *sh | wc -l) bash files"
-=======
-and add bpp_scriptcount to your prompt list.
 
-or declare it in a STR:
+- and add bpp_scriptcount to your prompt list.
+
+- or declare it in a STR:
 
     "STR \$(ls -l *sh | wc -l) bash files"
->>>>>>> b5b6a8c (Import of bash-prompt-property)
 
-or set a "text" object: `CMD bpp_text mytext` and then:
+- or set a "text" object: `CMD bpp_text mytext` and then:
 
     bpp-text "\$(ls -1 *sh | wc -l) bash files" mytext
 
+Whatever fits your workflow better.
+
 And boom, your prompt tells you how many bash files are in the current
 directory.  `Functions` obviously allow you much greater flexibility in
-processing, including the ability to disable it. `STR` have the
-advantage of simplicity, while the `text object` allows easy changes
-from the command line.  Whichever offers the advantages you need, use
-that!
+processing, including the ability to disable it. `
+
+STR` have the advantage of simplicity, while the `text object` allows
+easy changes from the command line.  Whichever offers the advantages you
+need, use that!
 
 See?  Get started!
