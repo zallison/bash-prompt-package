@@ -50,12 +50,12 @@ How about some examples?  You set the array `BPP` to contain the elements you wa
 
 Here's a simple example,showing just the VCS (git or svn) status, as well as "\w", the current working directory.
 
-	source bash-prompt-package.sh
+    source bash-prompt-package.sh
 
-	BPP=(
-	"CMD bpp_vcs"
-	"STRDEC \w"
-	"STR $ ")
+    BPP=(
+    "CMD bpp_vcs"
+    "STRDEC \w"
+    "STR $ ")
 
 
 ![vcs prompt 1](./examples/prompt1.png)
@@ -79,20 +79,20 @@ As does comitting it!
 Here's a two line prompt showing uptime, battery, and cpu temp information on top, with VCS (git, svn, etc) and the current path..  The config looks something like
 
 
-	source bash-prompt-package.sh
+    source bash-prompt-package.sh
 
-	BPP=("CMD bpp_error"
-		 "STR ${BPP_GLYPHS[NEWLINE]}${BPP_COLOR[DECORATION]}${BPP_GLYPHS[TOP]} "
-		 "CMD bpp_user_and_host"
-		 "CMD bpp_uptime"
-		 "CMD bpp_acpi"
-		 "CMD bpp_cpu_temp"
-		 "CMD bpp_text mytask"
-		 "CMDRAW bpp_note"
-		 "STR ${BPP_GLYPHS[NEWLINE]}${BPP_COLOR[DECORATION]}${BPP_GLYPHS[BOTTOM]}${BPP_COLOR[RESET]}"
-		 "CMD bpp_vcs"
-		 "STR ${BPP_COLOR[DECORATION]}${BPP_GLYPHS[OPEN]}${BPP_COLOR[RESET]}\w${BPP_COLOR[DECORATION]}${BPP_GLYPHS[CLOSE]}\$");
-	 bpp-text "Report bugs" mytask
+    BPP=("CMD bpp_error"
+         "STR ${BPP_GLYPHS[NEWLINE]}${BPP_COLOR[DECORATION]}${BPP_GLYPHS[TOP]} "
+         "CMD bpp_user_and_host"
+         "CMD bpp_uptime"
+         "CMD bpp_acpi"
+         "CMD bpp_cpu_temp"
+         "CMD bpp_text mytask"
+         "CMDRAW bpp_note"
+         "STR ${BPP_GLYPHS[NEWLINE]}${BPP_COLOR[DECORATION]}${BPP_GLYPHS[BOTTOM]}${BPP_COLOR[RESET]}"
+         "CMD bpp_vcs"
+         "STR ${BPP_COLOR[DECORATION]}${BPP_GLYPHS[OPEN]}${BPP_COLOR[RESET]}\w${BPP_COLOR[DECORATION]}${BPP_GLYPHS[CLOSE]}\$");
+     bpp-text "Report bugs" mytask
 
 
 
@@ -104,9 +104,9 @@ Here's a two line prompt showing uptime, battery, and cpu temp information on to
 
 Changing colors is easy too:
 
-	BPP_COLOR[GOOD]=${BPP_COLOR[PURPLE]}
-	BPP_COLOR[WARNING]=${BPP_BGCOLOR[BRIGHTRED]}${BPP_COLOR[BLACK]}
-	BPP_COLOR[CRIT]=${BPP_BGCOLOR[BRIGHTRED]}${BPP_COLOR[WHITE]}
+    BPP_COLOR[GOOD]=${BPP_COLOR[PURPLE]}
+    BPP_COLOR[WARNING]=${BPP_BGCOLOR[BRIGHTRED]}${BPP_COLOR[BLACK]}
+    BPP_COLOR[CRIT]=${BPP_BGCOLOR[BRIGHTRED]}${BPP_COLOR[WHITE]}
 
 ![new color prompt](./examples/prompt6.png)
 
@@ -205,11 +205,11 @@ Check the [source code](bash-prompt-package.sh) of the [functions](#all-function
 
 Example:
 
-	function bpp_scriptcount {
-		if [[ ${BPP_ENABLED[SCRIPTCOUNT]} == 1 ]]; then
-			echo "$(ls -l *sh | wc -l) bash files"
-		fi
-	}
+    function bpp_scriptcount {
+        if [[ ${BPP_ENABLED[SCRIPTCOUNT]} == 1 ]]; then
+            echo "$(ls -l *sh | wc -l) bash files"
+        fi
+    }
 
 <<<<<<< HEAD
 or declare it in a STR:
@@ -225,7 +225,7 @@ or declare it in a STR:
 
 or set a "text" object: `CMD bpp_text mytext` and then:
 
-	bpp-text "\$(ls -1 *sh | wc -l) bash files" mytext
+    bpp-text "\$(ls -1 *sh | wc -l) bash files" mytext
 
 And boom, your prompt tells you how many bash files are in the current
 directory.  `Functions` obviously allow you much greater flexibility in
