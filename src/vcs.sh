@@ -1,4 +1,4 @@
-function bpp_vcs {
+bpp_vcs() {
     INDEX=$1
 
     if [ -e .svn ] ; then
@@ -20,7 +20,7 @@ function bpp_vcs {
     echo ${VCS}
 }
 
-function bpp_svn {
+bpp_svn() {
     local SVN_STATUS
     SVN_STATUS=$(svn info 2>/dev/null)
     if [[ $SVN_STATUS != "" ]] ; then
@@ -36,7 +36,7 @@ function bpp_svn {
     echo $SVN
 }
 
-function bpp_git_shortstat() {
+bpp_git_shortstat() {
     [[ ${BPP_OPTIONS[VCS]} ]] || return 0
     BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
     [[ "$BRANCH" ]] || return 0
@@ -68,7 +68,7 @@ function bpp_git_shortstat() {
 
 }
 
-function bpp_git() {
+bpp_git() {
     [[ ${BPP_OPTIONS[VCS]} == "1" ]] || return
 
     GIT="";
@@ -92,7 +92,7 @@ function bpp_git() {
     echo $GIT
 }
 
-function bpp_git_status() {
+bpp_git_status() {
     command -v git 2>&1 > /dev/null || return
     local branch flags color
 
