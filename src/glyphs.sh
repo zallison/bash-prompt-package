@@ -29,9 +29,9 @@ utf8_p() {
     pos=${pos%%R*}                # Remove "Junk"
     pos=${pos##*\[}               #
     col=${pos##*;}                # Get the column number
-    #row=${pos%%;*}                # Get the row number
-    stty "$old_settings" # Reset Term
+    # row=${pos%%;*}  - unused -  # Get the row number
 
+    stty "$old_settings" # Reset Term
 
     if [[ ${col} == "20" ]]; then
         result=1 # UTF8 Output successful
@@ -56,8 +56,14 @@ if [[ ! "${UTF8_STATUS}" ]]; then
     status_map[0]=FAILED
     status_map[1]=ENABLED
 
-    utf8_p
-    declare -x UTF8_STATUS=${status_map[$?]}
+    local res
+    if utf8_p; then
+        UTF8_STATUS=1
+    else
+        UTF8_STATUS=0
+    fi
+
+    declare -x UTF8_STATUS=${status_map[$res]}
 fi
 
 _bpp_change_glyphs() {
