@@ -1,5 +1,6 @@
 # UTF Glyphs
 utf8_p() {
+    [[ BPP_OPTIONS["ASSUME_UTF8"] == 1 ]] && return 1
     local pos col result get_pos pause clear_results
     clear_results=1 # Move to front of line, print spaces, move back to the
                     # front of the line.  Like we never did anything!
