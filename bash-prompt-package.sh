@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# Only run for interactive shells
 [[ $- == *i* ]]  || return
 
 #######################
@@ -14,6 +15,7 @@ declare -A BPP_BGCOLOR
 declare -A BPP_TEXT
 # UTF Glyphs
 utf8_p() {
+    [[ BPP_OPTIONS["ASSUME_UTF8"] == 1 ]] && return 1
     local pos col result get_pos pause clear_results
     clear_results=1 # Move to front of line, print spaces, move back to the
                     # front of the line.  Like we never did anything!
@@ -42,9 +44,9 @@ utf8_p() {
     pos=${pos%%R*}                # Remove "Junk"
     pos=${pos##*\[}               #
     col=${pos##*;}                # Get the column number
-    #row=${pos%%;*}                # Get the row number
-    stty "$old_settings" # Reset Term
+    # row=${pos%%;*}  - unused -  # Get the row number
 
+    stty "$old_settings" # Reset Term
 
     if [[ ${col} == "20" ]]; then
         result=1 # UTF8 Output successful
@@ -52,7 +54,7 @@ utf8_p() {
     elif [[ ${col} == "30" ]]; then
         echo -n "  ... ANSI." : # Only uses ASCII
     else
-        echo -n "unknown: ${col}" >&2 # Unexpected value
+        echo "bpp: unknown text type \"${col}\"" >&2 # Unexpected value
     fi
 
     # Maybe pause so results can be read
@@ -149,6 +151,8 @@ BPP_COLOR[BRIGHTPURPLE]=$(bpp_mk_prompt_color 13)
 BPP_COLOR[BRIGHTCYAN]=$(bpp_mk_prompt_color 14)
 BPP_COLOR[WHITE]=$(bpp_mk_prompt_color 15)
 
+export BPP_COLOR
+
 # Background
 BPP_BGCOLOR[BLACK]=$(bpp_mk_prompt_bgcolor 0)
 BPP_BGCOLOR[RED]=$(bpp_mk_prompt_bgcolor 1)
@@ -166,6 +170,8 @@ BPP_BGCOLOR[BRIGHTBLUE]=$(bpp_mk_prompt_bgcolor 12)
 BPP_BGCOLOR[BRIGHTPURPLE]=$(bpp_mk_prompt_bgcolor 13)
 BPP_BGCOLOR[BRIGHTCYAN]=$(bpp_mk_prompt_bgcolor 14)
 BPP_BGCOLOR[WHITE]=$(bpp_mk_prompt_bgcolor 15)
+
+export BPP_BGCOLOR
 # Term Options
 if [[ $TERM = *256* ]]; then
     BPP_COLOR[DECORATION]=${BPP_COLOR[RESET]}$(bpp_mk_prompt_color 25) # blue-ish
@@ -197,11 +203,10 @@ BPP_OPTIONS[VCS]=1
 BPP_OPTIONS[VCS_REMOTE]=0
 BPP_OPTIONS[VCS_TYPE]=0
 BPP_OPTIONS[VENV]=1
-
 BPP_OPTIONS[ACPI_HIDE_ABOVE]=65
 BPP_OPTIONS[DATE_FORMAT]="%I:%M"
-BPP_OPTIONS[HOST_LOCAL]=1
-BPP_OPTIONS[GLYPH]=${BPP_OPTIONS[GLYPH]-utf}
+BPP_OPTIONS[HOST_LOCAL]=${BPP_OPTIONS[HOST_LOCAL]:-1}
+BPP_OPTIONS[GLYPHS]=${BPP_OPTIONS[GLYPHS]-utf}
 BPP_OPTIONS[NOTE_FILE]="${HOME}/.bppnotes"
 BPP_OPTIONS[NOTE_ON_ENTRY]=1
 BPP_OPTIONS[TEMP_CRIT]=65
@@ -383,7 +388,7 @@ bpp_uptime() {
         load=$(uptime| sed 's/.*: //' | sed 's/, / /g')
         ignore=1
         for val in $load; do
-            if [[ $(bc <<< "$val > ${display}") == 1 ]]; then
+            if [[ $(echo "$val > ${display}" | bc) == 1 ]]; then
                 ignore=0
             fi
             UPTIME+="$(colorize_load ${val})${BPP_OPTIONS[UPTIME_SEPERATOR]}"
@@ -949,7 +954,7 @@ bpp_git_shortstat() {
 
 }
 
-function bpp_git() {
+bpp_git() {
     [[ ${BPP_OPTIONS[VCS]} == "1" ]] || return
 
     GIT="";
@@ -973,7 +978,7 @@ function bpp_git() {
     echo $GIT
 }
 
-function bpp_git_status() {
+bpp_git_status() {
     command -v git 2>&1 > /dev/null || return
     local branch flags color
 
@@ -1044,7 +1049,7 @@ function bpp_git_status() {
 }
 ### Tools
 
-function bpp-show-colors {
+_bpp_show_colors () {
     local ROWS=${1:-4}
     ## Show the 256 (we hope) colors available.
     for x in $(seq 0 255); do
@@ -1057,13 +1062,13 @@ function bpp-show-colors {
     done
 }
 
-function bpp-show-prompt {
+_bpp_show_prompt() {
     local j
     j=0
     for line in "${BPP[@]}"; do
         echo $j: $line
         j=$[ $j + 1 ];
-    done | sed 's/\\\[[^]]*\]/[FMT]/g'
+    done | sed 's/\\\[[^]]*\]/[FMT]/g';
 }
 declare -A BPP_NOTES
 if [[ "$BPP_NOTE" == 1 || -z "$BPP_NOTE" ]]; then
@@ -1073,7 +1078,7 @@ if [[ "$BPP_NOTE" == 1 || -z "$BPP_NOTE" ]]; then
     fi
 fi
 
-function bpp_note {
+bpp_note() {
     local PWD
     PWD=$(pwd)
     if [[ "$BPP_OPTIONS[NOTE]" == 0 ]]; then
@@ -1093,24 +1098,25 @@ function bpp_note {
         return
     fi
 
-    local IFS=$'\n'
-    while read LINE; do
-        echo -n "${BPP_GLYPHS[NEWLINE]}${BPP_COLOR[DECORATION]}${BPP_GLYPHS[MIDDLE]} * ${BPP_COLOR[WARNING]}${LINE}"
-    done <<< $(echo "$NOTE")
+    IFS=$'\n'
+    echo "$NOTE" | \
+        while read LINE; do
+            echo -n "${BPP_GLYPHS[NEWLINE]}${BPP_COLOR[DECORATION]}${BPP_GLYPHS[MIDDLE]} * ${BPP_COLOR[WARNING]}${LINE}"
+        done
 }
 
-function bpp-note {
-    local MESSAGE=$1
-    local DIR=${2:-$(pwd)}
+_bpp_note() {
+    MESSAGE=$1
+    DIR=${2:-$(pwd)}
     BPP_NOTES[$DIR]=$MESSAGE
     BPP_DATA[OLDPWD]=""
     _bpp_note_save
 }
 alias _bpp_note=bpp-note
 
-function _bpp_note_add {
-    local MESSAGE=$1
-    local DIR=${2:-$(pwd)}
+_bpp_note_add() {
+    MESSAGE=$1
+    DIR=${2:-$(pwd)}
     if [ ! -z "${BPP_NOTES[$DIR]}" ]; then
         MESSAGE="${BPP_NOTES[$DIR]}"$'\n'"$MESSAGE"
     fi
@@ -1122,6 +1128,6 @@ function _bpp_note_add {
 alias note=_bpp_note
 alias noteadd=_bpp_note_add
 
-function _bpp_note_save {
+_bpp_note_save() {
     declare -p BPP_NOTES > ${BPP_OPTIONS[NOTE_FILE]}
 }
