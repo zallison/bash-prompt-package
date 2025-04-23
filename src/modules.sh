@@ -22,11 +22,11 @@ bpp_uptime() {
             local load color
             load=$1
             color=${BPP_COLOR[GOOD]}
-            relative_load=$( bc <<< "scale=4;  $val / ${cores} * 100" )
+            relative_load=$(echo "scale=4;  $val / ${cores} * 100" | bc)
 
-            if [[ $(bc <<< "$load > ${warn}") = 1 ]]; then
+            if [[ $(echo "$load > ${warn}" | bc) = 1 ]]; then
                 color=${BPP_COLOR[WARNING]}
-            elif [[ $(bc <<< "$load > 1.1") = 1 ]]; then
+            elif [[ $(echo "$load > 1.1" | bc ) = 1 ]]; then
                 color=${BPP_COLOR[CRITICAL]}
             fi
 
@@ -41,7 +41,7 @@ bpp_uptime() {
         load=$(uptime| sed 's/.*: //' | sed 's/, / /g')
         ignore=1
         for val in $load; do
-            if [[ $(bc <<< "$val > ${display}") == 1 ]]; then
+            if [[ $(echo "$val > ${display}" | bc) == 1 ]]; then
                 ignore=0
             fi
             UPTIME+="$(colorize_load ${val})${BPP_OPTIONS[UPTIME_SEPERATOR]}"
@@ -52,7 +52,7 @@ bpp_uptime() {
 
 }
 
-function bpp_user_and_host {
+bpp_user_and_host() {
     [[ BPP_OPTIONS[USER] ]] || return
 
     if [ -z "$SSH_CONNECTION" ]; then
@@ -118,7 +118,7 @@ BPP_ERRORS[135]="Fatal error signal 7"
 BPP_ERRORS[136]="Fatal error signal 8"
 BPP_ERRORS[137]="Fatal error signal 9"
 BPP_ERRORS[255]="EXIT_OUT_LIMITS Exit status out of range(0..255)"
-function bpp_error {
+bpp_error() {
     [[ BPP_OPTIONS[ERROR] == 0 ]] || return
     [[ BPP_DATA[EXIT_STATUS] ]] || return
 
@@ -136,7 +136,7 @@ function bpp_error {
     echo $EXIT
 }
 
-function bpp_dirinfo {
+bpp_dirinfo() {
     [[ ${BPP_OPTIONS[DIRINFO]} == 1 ]] || return
 
     FILES="$(/bin/ls -F | grep -cv /$)${BPP_COLOR[GOOD]}${BPP_GLYPHS[FILE]}${BPP_COLOR[RESET]}"
@@ -147,10 +147,10 @@ function bpp_dirinfo {
     echo $DIRINFO
 }
 
-function bpp_set_title() {
+bpp_set_title() {
     [[ BPP_OPTIONS[SET_TITLE] == 1 ]] || return
 
-    function set_title {
+    set_title() {
         if [[ ! -z $TMUX && -z $SSH ]]; then
             tmux rename-window -t${TMUX_PANE} "$*"
         elif [[ $TERM =~ screen ]]; then
@@ -173,7 +173,7 @@ function bpp_set_title() {
 
 }
 
-function bpp_emacs_ansiterm_path_info() {
+bpp_emacs_ansiterm_path_info() {
     [[ BPP_OPTIONS[EMACS] == 1 ]] || return
 
     local ssh_hostname
@@ -202,13 +202,13 @@ function bpp_emacs_ansiterm_path_info() {
 }
 
 
-function bpp_emacs_vterm_path_info() {
+bpp_emacs_vterm_path_info() {
     [[ BPP_OPTIONS[EMACS] == 1 ]] || return
 
     local ssh_hostname
 
     VTERM_DIRTRACK="51;A"
-    function _vterm_printf {
+    _vterm_printf() {
         if [[ "$TMUX" ]]; then
             # tell tmux to pass the escape sequences through
             # (Source: http://permalink.gmane.org/gmane.comp.terminal-emulators.tmux.user/1324)
@@ -221,7 +221,7 @@ function bpp_emacs_vterm_path_info() {
         fi
     }
 
-    function vterm_prompt(){
+    vterm_prompt () {
         _vterm_printf "${VTERM_DIRTRACK}${1}"
     }
 
@@ -234,7 +234,7 @@ function bpp_emacs_vterm_path_info() {
     vterm_prompt "$(whoami)@${ssh_hostname}:$(pwd)"
 }
 
-function bpp_acpi {
+bpp_acpi() {
     [[ ${BPP_OPTIONS[ACPI]} == 1 ]] || return
     local ACPI BATTERY_LEVEL CHARGE_STATUS CHARGE_ICON BATTERY_DISP BLOCK
     ACPI=$(acpi 2>/dev/null | head -1 | awk '{print $3 $4}' | tr ,% \ \ )
@@ -267,7 +267,7 @@ function bpp_acpi {
     echo "${BATTERY_DISP}${CHARGE_ICON}${BPP_COLOR[RESET]}"
 }
 
-function bpp_get_block_height {
+bpp_get_block_height() {
     # Make a bar with 0
     height=$1
     BLOCK1="_"
@@ -307,7 +307,9 @@ function bpp_get_block_height {
     echo "$BLOCK"
 }
 
-function bpp_cpu_temp {
+# this is bpp, not spp, we use bash functions
+# shellcheck disable=SC3043,SC3054, SC3010
+bpp_cpu_temp() {
     [[ ${BPP_OPTIONS[TEMP]} == 1 ]] || return
     local TEMP
 
@@ -340,14 +342,14 @@ function bpp_cpu_temp {
     echo $temp_status
 }
 
-function bpp_history {
+bpp_history() {
     # Share history with other shells by storing and reloading the
     # history.
     history -a # Store my latest command
     history -n # Get commmands from other shells
 }
 
-function bpp-text {
+bpp_text() {
     # bpp-text "Hello World" myvar
     # BPP=( ... CMD bpp-text myvar
     # If no "myvar" is given "text" is used.
@@ -355,12 +357,15 @@ function bpp-text {
     KEY=${2:-text}
     BPP_TEXT[$KEY]="$MESSAGE"
 }
-function bpp-untext {
+alias bpp-text=bpp_text
+
+bpp_untext() {
     KEY=$1
     unset BPP_TEXT[$KEY]
 }
+alias bpp-text=bpp_untext
 
-function bpp_text {
+bpp_text() {
     KEY=${1:-text}
 
     TEXT=${BPP_TEXT[$KEY]}
