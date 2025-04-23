@@ -59,7 +59,7 @@ if [[ ! "${UTF8_STATUS}" ]]; then
     declare -x UTF8_STATUS=${status_map[$?]}
 fi
 
-function _bpp_change_glyphs {
+_bpp_change_glyphs() {
     if [[ "${BPP_OPTIONS[GLYPH]}" = "utf" && ${UTF8_STATUS} == "ENABLED"  ]]; then
         BPP_GLYPHS[BOTTOM]="╚"
         BPP_GLYPHS[OPEN]="❰"
