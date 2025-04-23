@@ -39,7 +39,7 @@ utf8_p() {
     elif [[ ${col} == "30" ]]; then
         echo -n "  ... ANSI." : # Only uses ASCII
     else
-        echo -n "unknown: ${col}" >&2 # Unexpected value
+        echo "bpp: unknown text type \"${col}\"" >&2 # Unexpected value
     fi
 
     # Maybe pause so results can be read
