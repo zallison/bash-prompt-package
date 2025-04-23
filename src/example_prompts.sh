@@ -1,10 +1,10 @@
 ### Prompt Examples
 
-function bpp-simple-prompt {
+bpp-simple-prompt() {
     BPP=('STR \u@\h:\w\$')
 }
 
-function bpp-compact-prompt {
+bpp-compact-prompt() {
     BPP_DATA[DECORATOR]=bpp_decorate
     BPP_OPTIONS[VCS_REMOTE]=0
     export BPP=("EXE bpp_set_title"
@@ -14,7 +14,7 @@ function bpp-compact-prompt {
                 "STR \$")
 }
 
-function bpp-fancy-prompt {
+bpp-fancy-prompt() {
     BPP_DATA[DECORATOR]=bpp_decorate
     BPP=("EXE bpp_set_title"
          "EXE bpp_history"
@@ -32,7 +32,7 @@ function bpp-fancy-prompt {
          "STR ${BPP_COLOR[DECORATION]}${BPP_GLYPHS[OPEN]}${BPP_COLOR[RESET]}\w${BPP_COLOR[DECORATION]}${BPP_GLYPHS[CLOSE]}\$")
 }
 
-function bpp-super-git-prompt {
+bpp-super-git-prompt() {
     bpp-fancy-prompt
     BPP[12]=${BPP[11]} # Keep the STR as the last element
     BPP[10]="CMDRAW bpp_super_git"
@@ -40,7 +40,7 @@ function bpp-super-git-prompt {
 
 }
 
-function bpp_super_git {
+bpp_super_git() {
     if [ "$(git status 2>&1 >/dev/null)" ]; then
         # Only if we're in a git project
         return
