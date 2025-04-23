@@ -17,6 +17,8 @@ BPP_COLOR[BRIGHTPURPLE]=$(bpp_mk_prompt_color 13)
 BPP_COLOR[BRIGHTCYAN]=$(bpp_mk_prompt_color 14)
 BPP_COLOR[WHITE]=$(bpp_mk_prompt_color 15)
 
+export BPP_COLOR
+
 # Background
 BPP_BGCOLOR[BLACK]=$(bpp_mk_prompt_bgcolor 0)
 BPP_BGCOLOR[RED]=$(bpp_mk_prompt_bgcolor 1)
@@ -34,3 +36,5 @@ BPP_BGCOLOR[BRIGHTBLUE]=$(bpp_mk_prompt_bgcolor 12)
 BPP_BGCOLOR[BRIGHTPURPLE]=$(bpp_mk_prompt_bgcolor 13)
 BPP_BGCOLOR[BRIGHTCYAN]=$(bpp_mk_prompt_bgcolor 14)
 BPP_BGCOLOR[WHITE]=$(bpp_mk_prompt_bgcolor 15)
+
+export BPP_BGCOLOR

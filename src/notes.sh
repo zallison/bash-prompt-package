@@ -26,10 +26,11 @@ bpp_note() {
         return
     fi
 
-    local IFS=$'\n'
-    while read LINE; do
-        echo -n "${BPP_GLYPHS[NEWLINE]}${BPP_COLOR[DECORATION]}${BPP_GLYPHS[MIDDLE]} * ${BPP_COLOR[WARNING]}${LINE}"
-    done <<< $(echo "$NOTE")
+    IFS=$'\n'
+    echo "$NOTE" | \
+        while read LINE; do
+            echo -n "${BPP_GLYPHS[NEWLINE]}${BPP_COLOR[DECORATION]}${BPP_GLYPHS[MIDDLE]} * ${BPP_COLOR[WARNING]}${LINE}"
+        done
 }
 
 _bpp_note() {
