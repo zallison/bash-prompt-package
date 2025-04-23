@@ -32,9 +32,40 @@ BPP_OPTIONS[VENV_PATHS]="venv env virtual-env .venv .environment environment"
 BPP_OPTIONS[VERBOSE_ERROR]=1
 
 BPP_DATA[OLDPWD]=""
+
 # Command to "decorate" text.  By default `bpp_decorate` wraps it in ❰ and ❱
 # This is run on each "CMD" entry.
+
 BPP_DATA[DECORATOR]="bpp_decorate"
+
+export BPP_DATA
+
+# Examples:
+#
+# # my_decorate () {
+# #     # Return nothing if we have nothing to decorate
+# #     [ -z "$*" ] && return
+# #     echo "[$*]" # bpp_decorate foo -> [foo]
+# # }
+#
+# # default_decorate () {
+# #     # Return nothing if we have nothing to decorate
+# #     [ -z "$*" ] && return
+# #
+# #     # The text to decorate
+# #     args="$*"
+# #
+# #     # Simple decoartion - decoration colored glyph (utf, ascii etc) for open and close.
+# #     pre_decoration="${BPP_COLOR[DECORATION]}${BPP_GLYPHS[OPEN]}${BPP_COLOR[RESET]}"
+# #     post_decorations="${BPP_COLOR[DECORATION]}${BPP_GLYPHS[CLOSE]}${BPP_COLOR[RESET]}"
+# #
+# #     # Put it all together
+# #     result="${pre_decoration}${args}${post_decorations}"
+# #
+# #     # Return the entire thing in one string
+# #     echo "${result}"
+# # }
+
 
 # Bash Options
 export PROMPT_DIRTRIM=3
