@@ -71,7 +71,6 @@ if [[ ! "${UTF8_STATUS}" ]]; then
     status_map[0]=FAILED
     status_map[1]=ENABLED
 
-    local res
     if utf8_p; then
         UTF8_STATUS=1
     else
@@ -203,6 +202,7 @@ BPP_OPTIONS[VCS]=1
 BPP_OPTIONS[VCS_REMOTE]=0
 BPP_OPTIONS[VCS_TYPE]=0
 BPP_OPTIONS[VENV]=1
+
 BPP_OPTIONS[ACPI_HIDE_ABOVE]=65
 BPP_OPTIONS[DATE_FORMAT]="%I:%M"
 BPP_OPTIONS[HOST_LOCAL]=${BPP_OPTIONS[HOST_LOCAL]:-1}
@@ -465,20 +465,24 @@ BPP_ERRORS[135]="Fatal error signal 7"
 BPP_ERRORS[136]="Fatal error signal 8"
 BPP_ERRORS[137]="Fatal error signal 9"
 BPP_ERRORS[255]="EXIT_OUT_LIMITS Exit status out of range(0..255)"
-bpp_error() {
-    [[ BPP_OPTIONS[ERROR] == 0 ]] || return
-    [[ BPP_DATA[EXIT_STATUS] ]] || return
 
-    local ERR=${BPP_DATA[EXIT_STATUS]}
-    local EXIT MESSAGE
+bpp_error() {
+    local EXIT MESSAGE ERR
+
+    [[ ${BPP_OPTIONS[ERROR]} == 0 ]] && return
+    [[ ${BPP_DATA[EXIT_STATUS]} != 0 ]] || return
+
+    ERR=${BPP_DATA[EXIT_STATUS]}
 
     if [[ "${BPP_DATA[EXIT_STATUS]}" -gt 255 ]]; then
         MESSAGE="Invalid Exit Status"
     else
         MESSAGE=${BPP_DATA[EXIT_STATUS]}
-        [[ BPP_OPTIONS[VERBOSE_ERROR] ]] && MESSAGE+=" - ${BPP_ERRORS[$ERR]:-Unknown or nonstandard error}"
+        [[ ${BPP_OPTIONS[VERBOSE_ERROR]} == 1 ]] && MESSAGE+=" - ${BPP_ERRORS[$ERR]:-Unknown or nonstandard error}"
     fi
     EXIT="${BPP_COLOR[CRITICAL]}error: ${MESSAGE}"
+
+    BPP_DATA[EXIT_STATUS]=0
 
     echo $EXIT
 }
@@ -729,11 +733,11 @@ bpp_text() {
 }
 ### Prompt Examples
 
-function bpp-simple-prompt {
+bpp-simple-prompt() {
     BPP=('STR \u@\h:\w\$')
 }
 
-function bpp-compact-prompt {
+bpp-compact-prompt() {
     BPP_DATA[DECORATOR]=bpp_decorate
     BPP_OPTIONS[VCS_REMOTE]=0
     export BPP=("EXE bpp_set_title"
@@ -743,7 +747,7 @@ function bpp-compact-prompt {
                 "STR \$")
 }
 
-function bpp-fancy-prompt {
+bpp-fancy-prompt() {
     BPP_DATA[DECORATOR]=bpp_decorate
     BPP=("EXE bpp_set_title"
          "EXE bpp_history"
@@ -761,7 +765,7 @@ function bpp-fancy-prompt {
          "STR ${BPP_COLOR[DECORATION]}${BPP_GLYPHS[OPEN]}${BPP_COLOR[RESET]}\w${BPP_COLOR[DECORATION]}${BPP_GLYPHS[CLOSE]}\$")
 }
 
-function bpp-super-git-prompt {
+bpp-super-git-prompt() {
     bpp-fancy-prompt
     BPP[12]=${BPP[11]} # Keep the STR as the last element
     BPP[10]="CMDRAW bpp_super_git"
@@ -769,7 +773,7 @@ function bpp-super-git-prompt {
 
 }
 
-function bpp_super_git {
+bpp_super_git() {
     if [ "$(git status 2>&1 >/dev/null)" ]; then
         # Only if we're in a git project
         return
