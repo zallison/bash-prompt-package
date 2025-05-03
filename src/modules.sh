@@ -118,20 +118,24 @@ BPP_ERRORS[135]="Fatal error signal 7"
 BPP_ERRORS[136]="Fatal error signal 8"
 BPP_ERRORS[137]="Fatal error signal 9"
 BPP_ERRORS[255]="EXIT_OUT_LIMITS Exit status out of range(0..255)"
-bpp_error() {
-    [[ BPP_OPTIONS[ERROR] == 0 ]] || return
-    [[ BPP_DATA[EXIT_STATUS] ]] || return
 
-    local ERR=${BPP_DATA[EXIT_STATUS]}
-    local EXIT MESSAGE
+bpp_error() {
+    local EXIT MESSAGE ERR
+
+    [[ ${BPP_OPTIONS[ERROR]} == 0 ]] && return
+    [[ ${BPP_DATA[EXIT_STATUS]} != 0 ]] || return
+
+    ERR=${BPP_DATA[EXIT_STATUS]}
 
     if [[ "${BPP_DATA[EXIT_STATUS]}" -gt 255 ]]; then
         MESSAGE="Invalid Exit Status"
     else
         MESSAGE=${BPP_DATA[EXIT_STATUS]}
-        [[ BPP_OPTIONS[VERBOSE_ERROR] ]] && MESSAGE+=" - ${BPP_ERRORS[$ERR]:-Unknown or nonstandard error}"
+        [[ ${BPP_OPTIONS[VERBOSE_ERROR]} == 1 ]] && MESSAGE+=" - ${BPP_ERRORS[$ERR]:-Unknown or nonstandard error}"
     fi
     EXIT="${BPP_COLOR[CRITICAL]}error: ${MESSAGE}"
+
+    BPP_DATA[EXIT_STATUS]=0
 
     echo $EXIT
 }
