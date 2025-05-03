@@ -56,7 +56,6 @@ if [[ ! "${UTF8_STATUS}" ]]; then
     status_map[0]=FAILED
     status_map[1]=ENABLED
 
-    local res
     if utf8_p; then
         UTF8_STATUS=1
     else
